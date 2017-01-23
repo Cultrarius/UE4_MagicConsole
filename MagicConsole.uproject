@@ -1,0 +1,32 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "4.14",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "MagicConsole",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "CascadeExtensionPlugin",
+			"Enabled": true,
+			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/168854e0e14b40c6bb60cc441b0c5490"
+		},
+		{
+			"Name": "LowEntryCompression",
+			"Enabled": true,
+			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/8e35c7f136ee41c581255e3762d5738e"
+		},
+		{
+			"Name": "SVG_Importer_Plugin",
+			"Enabled": true
+		}
+	],
+	"AdditionalPluginDirectories": [
+		"/../../../../../../MagicConsole/Plugins"
+	]
+}

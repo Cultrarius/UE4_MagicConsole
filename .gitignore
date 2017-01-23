@@ -1,0 +1,14 @@
+/.vs/
+/Binaries/
+/Intermediate/
+/Saved/
+/SVG_Importer.VC.VC.opendb
+/SVG_Importer.VC.db
+/SVG_Importer.sln
+/Config/
+/Packaged/
+/Source/
+/Content/
+*.sln
+/MagicConsole.VC.VC.opendb
+/MagicConsole.VC.db
