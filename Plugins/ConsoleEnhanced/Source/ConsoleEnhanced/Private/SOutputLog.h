@@ -5,6 +5,7 @@
 #include "TextFilterExpressionEvaluator.h"
 #include "Regex.h"
 #include <map>
+#include <regex>
 
 class FOutputLogTextLayoutMarshaller;
 class SSearchBox;
@@ -145,6 +146,10 @@ struct FLogFilter
 	/** true to show Errors. */
 	bool bShowErrors;
 
+    /** true to show Logs. */
+    bool bUseRegex = true;
+    bool bIsRegexValid = false;
+
 	/** Enable all filters by default */
 	FLogFilter() : TextFilterExpressionEvaluator(ETextFilterExpressionEvaluatorMode::BasicString)
 	{
@@ -158,14 +163,40 @@ struct FLogFilter
 	bool IsMessageAllowed(const TSharedPtr<FLogMessage>& Message);
 
 	/** Set the Text to be used as the Filter's restrictions */
-	void SetFilterText(const FText& InFilterText) { TextFilterExpressionEvaluator.SetFilterText(InFilterText); }
+	void SetFilterText(const FText& InFilterText) {
+        TextFilterExpressionEvaluator.SetFilterText(InFilterText);
+
+        FString regexFilter = InFilterText.ToString();
+        if (bUseRegex) {
+            try {
+                searchRegex = std::regex(TCHAR_TO_ANSI(*regexFilter), std::regex_constants::nosubs |
+                    std::regex_constants::icase | std::regex_constants::optimize);
+                bIsRegexValid = true;
+                lastValidRegex = searchRegex;
+            }
+            catch (std::regex_error&) {
+                bIsRegexValid = false;
+            }
+        }
+    }
 
 	/** Returns Evaluator syntax errors (if any) */
-	FText GetSyntaxErrors() { return TextFilterExpressionEvaluator.GetFilterErrorText(); }
+	FText GetSyntaxErrors() {
+        if (bUseRegex) {
+            return bIsRegexValid ? FText::GetEmpty() : getInValidRegexText();
+        }
+        else {
+            return TextFilterExpressionEvaluator.GetFilterErrorText();
+        }
+    }
 
 private:
 	/** Expression evaluator that can be used to perform complex text filter queries */
 	FTextFilterExpressionEvaluator TextFilterExpressionEvaluator;
+
+    std::regex searchRegex;
+    std::regex lastValidRegex;
+    FText getInValidRegexText();
 };
 
 /**
@@ -291,6 +322,12 @@ private:
 
 	/** Returns the state of "Errors". */
 	bool MenuErrors_IsChecked() const;
+
+    /** Toggles "Regex" true/false. */
+    void MenuRegex_Execute();
+
+    /** Returns the state of "Errors". */
+    bool MenuRegex_IsChecked() const;
 
 	/** Forces re-population of the messages list */
 	void Refresh();

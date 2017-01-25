@@ -22,10 +22,13 @@ using namespace std;
 class FLogFilter_TextFilterExpressionContext : public ITextFilterExpressionContext
 {
 public:
-    explicit FLogFilter_TextFilterExpressionContext(const FLogMessage& InMessage) : Message(&InMessage) {}
+    FLogFilter_TextFilterExpressionContext(const FLogMessage& InMessage) : Message(&InMessage) {       
+    }
 
     /** Test the given value against the strings extracted from the current item */
-    virtual bool TestBasicStringExpression(const FTextFilterString& InValue, const ETextFilterTextComparisonMode InTextComparisonMode) const override { return TextFilterUtils::TestBasicStringExpression(*Message->Message, InValue, InTextComparisonMode); }
+    virtual bool TestBasicStringExpression(const FTextFilterString& InValue, const ETextFilterTextComparisonMode InTextComparisonMode) const override {
+        return TextFilterUtils::TestBasicStringExpression(*Message->Message, InValue, InTextComparisonMode); 
+    }
 
     /**
     * Perform a complex expression test for the current item
@@ -1333,6 +1336,22 @@ TSharedRef<SWidget> SOutputLog::MakeAddFilterMenu()
 {
     FMenuBuilder MenuBuilder(/*bInShouldCloseWindowAfterMenuSelection=*/true, nullptr);
     FillVerbosityEntries(MenuBuilder);
+
+    MenuBuilder.BeginSection("OutputLogSettingEntries");
+    {
+        MenuBuilder.AddMenuEntry(
+            LOCTEXT("SearchRegex", "/Regex/ search"),
+            LOCTEXT("SearchRegex_Tooltip", "The search function supports regular expressions"),
+            FSlateIcon(),
+            FUIAction(FExecuteAction::CreateSP(this, &SOutputLog::MenuRegex_Execute),
+                FCanExecuteAction::CreateSP(this, &SOutputLog::Menu_CanExecute),
+                FIsActionChecked::CreateSP(this, &SOutputLog::MenuRegex_IsChecked)),
+            NAME_None,
+            EUserInterfaceActionType::ToggleButton
+        );
+    }
+    MenuBuilder.EndSection();
+
     return MenuBuilder.MakeWidget();
 }
 
@@ -1396,13 +1415,26 @@ bool SOutputLog::MenuErrors_IsChecked() const
     return Filter.bShowErrors;
 }
 
+bool SOutputLog::MenuRegex_IsChecked() const
+{
+    return Filter.bUseRegex;
+}
+
+void SOutputLog::MenuRegex_Execute()
+{
+    Filter.bUseRegex = !Filter.bUseRegex;
+
+    // Flag the messages count as dirty
+    MessagesTextMarshaller->MarkMessagesCacheAsDirty();
+    Refresh();
+}
+
 void SOutputLog::MenuLogs_Execute()
 {
     Filter.bShowLogs = !Filter.bShowLogs;
 
     // Flag the messages count as dirty
     MessagesTextMarshaller->MarkMessagesCacheAsDirty();
-
     Refresh();
 }
 
@@ -1412,7 +1444,6 @@ void SOutputLog::MenuWarnings_Execute()
 
     // Flag the messages count as dirty
     MessagesTextMarshaller->MarkMessagesCacheAsDirty();
-
     Refresh();
 }
 
@@ -1422,7 +1453,6 @@ void SOutputLog::MenuErrors_Execute()
 
     // Flag the messages count as dirty
     MessagesTextMarshaller->MarkMessagesCacheAsDirty();
-
     Refresh();
 }
 
@@ -1448,13 +1478,29 @@ bool FLogFilter::IsMessageAllowed(const TSharedPtr<FLogMessage>& Message)
 
     // Filter search phrase
     {
-        if (!TextFilterExpressionEvaluator.TestTextFilter(FLogFilter_TextFilterExpressionContext(*Message)))
+
+        if (bUseRegex) {
+            if (TextFilterExpressionEvaluator.GetFilterText().IsEmpty()) {
+                return true;
+            }
+            smatch matcher;
+            string msg(TCHAR_TO_ANSI(*(*Message->Message)));
+            if (!regex_search(msg, matcher, bIsRegexValid ? searchRegex : lastValidRegex)) {
+                return false;
+            }
+        } 
+        else if (!TextFilterExpressionEvaluator.TestTextFilter(FLogFilter_TextFilterExpressionContext(*Message)))
         {
             return false;
         }
     }
 
     return true;
+}
+
+FText FLogFilter::getInValidRegexText()
+{
+    return LOCTEXT("InvalidRegex", "Invalid regex");
 }
 
 #undef LOCTEXT_NAMESPACE
