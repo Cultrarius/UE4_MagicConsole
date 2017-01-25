@@ -734,81 +734,11 @@ void FOutputLogTextLayoutMarshaller::AppendMessagesToTextLayout(const TArray<TSh
 
         TSet<FTextRange> foundLinkRanges;
         auto hyperlinkRuns = CreateBlueprintHyperlinks(blueprints, foundLinkRanges, LineText, linkStyle);
+        CreateFilepathHyperlinks(LineText, foundLinkRanges, linkStyle, hyperlinkRuns);
 
-        IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-        FRegexMatcher pathMatcher(FilePathPattern, *LineText);
-        while (pathMatcher.FindNext()) {
-            int32 matchStart = pathMatcher.GetMatchBeginning();
-            FTextRange newRange(matchStart, pathMatcher.GetMatchEnding());
-            bool overlapping = false;
-            for (FTextRange range : foundLinkRanges) {
-                if ((range.BeginIndex <= newRange.BeginIndex && range.EndIndex >= newRange.BeginIndex) ||
-                    (range.BeginIndex <= newRange.EndIndex   && range.EndIndex >= newRange.EndIndex)) {
-                    overlapping = true;
-                    break;
-                }
-            }
-            if (overlapping) {
-                continue;
-            }
 
-            FString foundPath = pathMatcher.GetCaptureGroup(0);
-            foundPath.ReplaceInline(ANSI_TO_TCHAR("\""), ANSI_TO_TCHAR(""));
-            foundPath.ReplaceInline(ANSI_TO_TCHAR("'"), ANSI_TO_TCHAR(""));
-            if (!(PlatformFile.DirectoryExists(*foundPath) || PlatformFile.FileExists(*foundPath))) {
-                continue;
-            }
-            bool isSourceFile = foundPath.EndsWith(FString(".cpp")) || foundPath.EndsWith(FString(".h"));
+        CreateUrlHyperlinks(LineText, foundLinkRanges, linkStyle, hyperlinkRuns);
 
-            FRunInfo RunInfo(TEXT("a"));
-            RunInfo.MetaData.Add(TEXT("href"), isSourceFile ? FString("Open source file") : FString("Open file or directory"));
-
-            FSlateHyperlinkRun::FOnClick OnHyperlinkClicked = FSlateHyperlinkRun::FOnClick::CreateStatic(&RichTextHelper::OpenPath, foundPath, isSourceFile);
-            TSharedRef<FSlateHyperlinkRun> HyperlinkRun = FSlateHyperlinkRun::Create(
-                RunInfo,
-                LineText,
-                linkStyle,
-                OnHyperlinkClicked,
-                FSlateHyperlinkRun::FOnGenerateTooltip(),
-                FSlateHyperlinkRun::FOnGetTooltipText(),
-                newRange
-            );
-            hyperlinkRuns.insert(make_pair(matchStart, HyperlinkRun));
-            foundLinkRanges.Add(newRange);
-        }
-
-        FRegexMatcher urlMatcher(UrlPattern, *LineText);
-        while (urlMatcher.FindNext()) {
-            int32 matchStart = urlMatcher.GetMatchBeginning();
-            FTextRange newRange(matchStart, urlMatcher.GetMatchEnding());
-            bool overlapping = false;
-            for (FTextRange range : foundLinkRanges) {
-                if ((range.BeginIndex <= newRange.BeginIndex && range.EndIndex >= newRange.BeginIndex) ||
-                    (range.BeginIndex <= newRange.EndIndex   && range.EndIndex >= newRange.EndIndex)) {
-                    overlapping = true;
-                    break;
-                }
-            }
-            if (overlapping) {
-                continue;
-            }
-
-            FRunInfo RunInfo(TEXT("a"));
-            RunInfo.MetaData.Add(TEXT("href"), urlMatcher.GetCaptureGroup(0));
-
-            FSlateHyperlinkRun::FOnClick OnHyperlinkClicked = FSlateHyperlinkRun::FOnClick::CreateStatic(&RichTextHelper::OpenUrl);
-            TSharedRef<FSlateHyperlinkRun> HyperlinkRun = FSlateHyperlinkRun::Create(
-                RunInfo,
-                LineText,
-                linkStyle,
-                OnHyperlinkClicked,
-                FSlateHyperlinkRun::FOnGenerateTooltip(),
-                FSlateHyperlinkRun::FOnGetTooltipText(),
-                newRange
-            );
-            hyperlinkRuns.insert(make_pair(matchStart, HyperlinkRun));
-            foundLinkRanges.Add(newRange);
-        }
 
         if (hyperlinkRuns.empty()) {
             Runs.Add(FSlateTextRun::Create(FRunInfo(), LineText, MessageTextStyle));
@@ -828,12 +758,76 @@ void FOutputLogTextLayoutMarshaller::AppendMessagesToTextLayout(const TArray<TSh
                 Runs.Add(textRun);
             }
         }
-        //FSourceCodeNavigation::
 
         LinesToAdd.Emplace(MoveTemp(LineText), MoveTemp(Runs));
     }
 
     TextLayout->AddLines(LinesToAdd);
+}
+
+void FOutputLogTextLayoutMarshaller::CreateUrlHyperlinks(TSharedRef<FString> LineText, TSet<FTextRange> &foundLinkRanges, FHyperlinkStyle linkStyle, map<int32, TSharedRef<FSlateHyperlinkRun>> &hyperlinkRuns) const
+{
+    FRegexMatcher urlMatcher(UrlPattern, *LineText);
+    while (urlMatcher.FindNext()) {
+        int32 matchStart = urlMatcher.GetMatchBeginning();
+        FTextRange newRange(matchStart, urlMatcher.GetMatchEnding());
+        if (overlapping(newRange, foundLinkRanges)) {
+            continue;
+        }
+
+        FRunInfo RunInfo(TEXT("a"));
+        RunInfo.MetaData.Add(TEXT("href"), urlMatcher.GetCaptureGroup(0));
+
+        FSlateHyperlinkRun::FOnClick OnHyperlinkClicked = FSlateHyperlinkRun::FOnClick::CreateStatic(&RichTextHelper::OpenUrl);
+        TSharedRef<FSlateHyperlinkRun> HyperlinkRun = FSlateHyperlinkRun::Create(
+            RunInfo,
+            LineText,
+            linkStyle,
+            OnHyperlinkClicked,
+            FSlateHyperlinkRun::FOnGenerateTooltip(),
+            FSlateHyperlinkRun::FOnGetTooltipText(),
+            newRange
+        );
+        hyperlinkRuns.insert(make_pair(matchStart, HyperlinkRun));
+        foundLinkRanges.Add(newRange);
+    }
+}
+
+void FOutputLogTextLayoutMarshaller::CreateFilepathHyperlinks(TSharedRef<FString> LineText, TSet<FTextRange> &foundLinkRanges, FHyperlinkStyle linkStyle, map<int32, TSharedRef<FSlateHyperlinkRun>> &hyperlinkRuns) const
+{
+    IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+    FRegexMatcher pathMatcher(FilePathPattern, *LineText);
+    while (pathMatcher.FindNext()) {
+        int32 matchStart = pathMatcher.GetMatchBeginning();
+        FTextRange newRange(matchStart, pathMatcher.GetMatchEnding());
+        if (overlapping(newRange, foundLinkRanges)) {
+            continue;
+        }
+
+        FString foundPath = pathMatcher.GetCaptureGroup(0);
+        foundPath.ReplaceInline(ANSI_TO_TCHAR("\""), ANSI_TO_TCHAR(""));
+        foundPath.ReplaceInline(ANSI_TO_TCHAR("'"), ANSI_TO_TCHAR(""));
+        if (!(PlatformFile.DirectoryExists(*foundPath) || PlatformFile.FileExists(*foundPath))) {
+            continue;
+        }
+        bool isSourceFile = foundPath.EndsWith(FString(".cpp")) || foundPath.EndsWith(FString(".h"));
+
+        FRunInfo RunInfo(TEXT("a"));
+        RunInfo.MetaData.Add(TEXT("href"), isSourceFile ? FString("Open source file") : FString("Open file or directory"));
+
+        FSlateHyperlinkRun::FOnClick OnHyperlinkClicked = FSlateHyperlinkRun::FOnClick::CreateStatic(&RichTextHelper::OpenPath, foundPath, isSourceFile);
+        TSharedRef<FSlateHyperlinkRun> HyperlinkRun = FSlateHyperlinkRun::Create(
+            RunInfo,
+            LineText,
+            linkStyle,
+            OnHyperlinkClicked,
+            FSlateHyperlinkRun::FOnGenerateTooltip(),
+            FSlateHyperlinkRun::FOnGetTooltipText(),
+            newRange
+        );
+        hyperlinkRuns.insert(make_pair(matchStart, HyperlinkRun));
+        foundLinkRanges.Add(newRange);
+    }
 }
 
 map<int32, TSharedRef<FSlateHyperlinkRun>> FOutputLogTextLayoutMarshaller::CreateBlueprintHyperlinks(const TArray<UBlueprint*>& blueprints, TSet<FTextRange>& foundLinkRanges, TSharedRef<FString> LineText, FHyperlinkStyle linkStyle) const
@@ -875,15 +869,7 @@ map<int32, TSharedRef<FSlateHyperlinkRun>> FOutputLogTextLayoutMarshaller::Creat
             UEdGraph* foundGraph = graphIndices.Contains(index) ? graphIndices[index] : nullptr;
             int32 graphNameOffset = foundGraph ? foundGraph->GetName().Len() + 1 : 0;
             FTextRange newRange(index, index + pathName.Len() + graphNameOffset);
-            bool overlapping = false;
-            for (FTextRange range : foundLinkRanges) {
-                if ((range.BeginIndex <= newRange.BeginIndex && range.EndIndex >= newRange.BeginIndex) ||
-                    (range.BeginIndex <= newRange.EndIndex   && range.EndIndex >= newRange.EndIndex)) {
-                    overlapping = true;
-                    break;
-                }
-            }
-            if (overlapping) {
+            if (overlapping(newRange, foundLinkRanges)) {
                 continue;
             }
             FRunInfo RunInfo(TEXT("a"));
@@ -911,6 +897,17 @@ FTextBlockStyle FOutputLogTextLayoutMarshaller::GetStyle(FName StyleName) const
     return FTextBlockStyle(FEditorStyle::Get().GetWidgetStyle<FTextBlockStyle>(StyleName))
         .SetShadowColorAndOpacity(FLinearColor::Black)
         .SetShadowOffset(FVector2D(0.5, 0.5));
+}
+
+bool FOutputLogTextLayoutMarshaller::overlapping(const FTextRange& testRange, const TSet<FTextRange>& ranges)
+{
+    for (FTextRange range : ranges) {
+        if ((range.BeginIndex <= testRange.BeginIndex && range.EndIndex >= testRange.BeginIndex) ||
+            (range.BeginIndex <= testRange.EndIndex   && range.EndIndex >= testRange.EndIndex)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void FOutputLogTextLayoutMarshaller::ClearMessages()
@@ -981,18 +978,6 @@ FOutputLogTextLayoutMarshaller::FOutputLogTextLayoutMarshaller(TArray< TSharedPt
 {
 }
 
-FReply SOutputLog::OnLogKeyPressed(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent)
-{
-    FReply Reply = FReply::Unhandled();
-
-    // Check if F3 was pressed
-    if (InKeyEvent.GetKeyCode() == 114 && CanGotoAsset()) {
-        OnGotoAsset();
-        Reply = FReply::Handled();
-    }
-    return Reply;
-}
-
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SOutputLog::Construct(const FArguments& InArgs)
 {
@@ -1003,13 +988,10 @@ void SOutputLog::Construct(const FArguments& InArgs)
         .TextStyle(FEditorStyle::Get(), "Log.Normal")
         .ForegroundColor(FLinearColor::Gray)
         .Marshaller(MessagesTextMarshaller)
-        .OnKeyDownHandler(this, &SOutputLog::OnLogKeyPressed)
         .IsReadOnly(true)
         .AlwaysShowScrollbars(true)
         .OnVScrollBarUserScrolled(this, &SOutputLog::OnUserScrolled)
         .ContextMenuExtender(this, &SOutputLog::ExtendTextBoxMenu);
-
-    //MessagesTextBox->SetOnMouseDoubleClick(FPointerEventHandler::CreateRaw(this, &SOutputLog::OnLogMouseDoubleClick));
 
     ChildSlot
 	[
@@ -1144,7 +1126,7 @@ bool SOutputLog::CreateLogMessages(const TCHAR* message, ELogVerbosity::Type Ver
     if (UObjectInitialized() && !GExitPurge)
     {
         // Logging can happen very late during shutdown, even after the UObject system has been torn down, hence the init check above
-        //LogTimestampMode = GetDefault<UEditorStyleSettings>()->LogTimestampMode;
+        LogTimestampMode = GetDefault<UEditorStyleSettings>()->LogTimestampMode;
     }
 
     const int32 OldNumMessages = OutMessages.Num();
@@ -1152,26 +1134,6 @@ bool SOutputLog::CreateLogMessages(const TCHAR* message, ELogVerbosity::Type Ver
     // handle multiline strings by breaking them apart by line
     TArray<FTextRange> LineRanges;
     FString CurrentLogDump = message;
-
-    // check for call stacks
-    const FRegexPattern callstackPattern(TEXT("Script call stack:\\s*([\\w\\W]+)"));
-    FRegexMatcher callstackMatcher(callstackPattern, CurrentLogDump);
-
-    TArray<FString> calls;
-    if (callstackMatcher.FindNext())
-    {
-        const FRegexPattern callPattern(TEXT("\\s*([^\\n]+)"));
-        FString callstack = callstackMatcher.GetCaptureGroup(1);
-        FRegexMatcher callMatcher(callPattern, callstack);
-        while (callMatcher.FindNext()) {
-            calls.Add(callMatcher.GetCaptureGroup(1));
-        }
-    }
-    for (auto call : calls) {
-        call.Append("x");
-    }
-
-    //CurrentLogDump.Append(FString::SanitizeFloat(Time));
     FTextRange::CalculateLineRangesFromString(CurrentLogDump, LineRanges);
 
     bool bIsFirstLineInMessage = true;
@@ -1243,18 +1205,6 @@ void SOutputLog::ExtendTextBoxMenu(FMenuBuilder& Builder)
         FSlateIcon(),
         ClearOutputLogAction
     );
-
-    FUIAction GotoAssetAction(
-        FExecuteAction::CreateRaw(this, &SOutputLog::OnGotoAsset),
-        FCanExecuteAction::CreateSP(this, &SOutputLog::CanGotoAsset)
-    );
-
-    Builder.AddMenuEntry(
-        NSLOCTEXT("OutputLog", "GotoAssetLabel", "Goto Selection"),
-        NSLOCTEXT("OutputLog", "GotoAssetTooltip", "Goes to the asset or blueprint under the cursor"),
-        FSlateIcon(),
-        GotoAssetAction
-    );
 }
 
 void SOutputLog::OnClearLog()
@@ -1265,21 +1215,6 @@ void SOutputLog::OnClearLog()
     MessagesTextMarshaller->ClearMessages();
     MessagesTextBox->Refresh();
     bIsUserScrolled = false;
-}
-
-void SOutputLog::OnGotoAsset()
-{
-    auto activeRun = MessagesTextBox->GetRunUnderCursor();
-    if (activeRun.IsValid()) {
-        FString tmp("abc");
-        activeRun->AppendTextTo(tmp);
-        UE_LOG(LogTemp, Warning, TEXT("%s"), *tmp);
-    }
-}
-
-bool SOutputLog::CanGotoAsset() const
-{
-    return true;
 }
 
 void SOutputLog::OnUserScrolled(float ScrollOffset)

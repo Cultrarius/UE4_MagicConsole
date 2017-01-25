@@ -256,14 +256,6 @@ protected:
 	 */
 	void OnClearLog();
 
-    void OnGotoAsset();
-
-    bool CanGotoAsset() const;
-
-    FReply OnLogKeyPressed(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent);
-
-    //FReply OnLogMouseDoubleClick(const FGeometry& MyGeometry, const FPointerEvent& InEvent);
-
 	/**
 	 * Called when the user scrolls the log window vertically
 	 */
@@ -370,6 +362,12 @@ protected:
     std::map<int32, TSharedRef<FSlateHyperlinkRun>> CreateBlueprintHyperlinks(const TArray<UBlueprint*>& blueprints, TSet<FTextRange>& foundLinkRanges,
         TSharedRef<FString> LineText, FHyperlinkStyle LinkStyle) const;
 
+    void CreateFilepathHyperlinks(TSharedRef<FString> LineText, TSet<FTextRange> &foundLinkRanges, FHyperlinkStyle linkStyle,
+        std::map<int32, TSharedRef<FSlateHyperlinkRun>> &hyperlinkRuns) const;
+
+    void CreateUrlHyperlinks(TSharedRef<FString> LineText, TSet<FTextRange> &foundLinkRanges, FHyperlinkStyle linkStyle,
+        std::map<int32, TSharedRef<FSlateHyperlinkRun>> &hyperlinkRuns) const;
+
     FTextBlockStyle GetStyle(FName StyleName) const;
 
 	/** All log messages to show in the text box */
@@ -388,4 +386,7 @@ protected:
 
     FRegexPattern UrlPattern;
     FRegexPattern FilePathPattern;
+
+private:
+    static bool overlapping(const FTextRange& testRange, const TSet<FTextRange>& ranges);
 };
