@@ -1009,91 +1009,91 @@ void SOutputLog::Construct(const FArguments& InArgs)
     //MessagesTextBox->SetOnMouseDoubleClick(FPointerEventHandler::CreateRaw(this, &SOutputLog::OnLogMouseDoubleClick));
 
     ChildSlot
-        [
-            SNew(SVerticalBox)
+	[
+		SNew(SVerticalBox)
 
-            // Console output and filters
-        + SVerticalBox::Slot()
-        [
-            SNew(SBorder)
-            .Padding(3)
-        .BorderImage(FEditorStyle::GetBrush("ToolPanel.GroupBorder"))
-        [
-            SNew(SVerticalBox)
+		// Console output and filters
+		+SVerticalBox::Slot()
+		[
+			SNew(SBorder)
+			.Padding(3)
+			.BorderImage(FEditorStyle::GetBrush("ToolPanel.GroupBorder"))
+			[
+				SNew(SVerticalBox)
 
-            // Output Log Filter
-        + SVerticalBox::Slot()
-        .AutoHeight()
-        .Padding(FMargin(0.0f, 0.0f, 0.0f, 4.0f))
-        [
-            SNew(SHorizontalBox)
+				// Output Log Filter
+				+SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(FMargin(0.0f, 0.0f, 0.0f, 4.0f))
+				[
+					SNew(SHorizontalBox)
+			
+					+SHorizontalBox::Slot()
+					.AutoWidth()
+					[
+						SNew(SComboButton)
+						.ComboButtonStyle(FEditorStyle::Get(), "OutputLog.Filters.Style")
+						.ForegroundColor(FLinearColor::White)
+						.ContentPadding(0)
+						.ToolTipText(LOCTEXT("AddFilterToolTip", "Add an output log filter."))
+						.OnGetMenuContent(this, &SOutputLog::MakeAddFilterMenu)
+						.HasDownArrow(true)
+						.ContentPadding(FMargin(1, 0))
+						.ButtonContent()
+						[
+							SNew(SHorizontalBox)
 
-            + SHorizontalBox::Slot()
-        .AutoWidth()
-        [
-            SNew(SComboButton)
-            .ComboButtonStyle(FEditorStyle::Get(), "OutputLog.Filters.Style")
-        .ForegroundColor(FLinearColor::White)
-        .ContentPadding(0)
-        .ToolTipText(LOCTEXT("AddFilterToolTip", "Add an output log filter."))
-        .OnGetMenuContent(this, &SOutputLog::MakeAddFilterMenu)
-        .HasDownArrow(true)
-        .ContentPadding(FMargin(1, 0))
-        .ButtonContent()
-        [
-            SNew(SHorizontalBox)
+							+SHorizontalBox::Slot()
+							.AutoWidth()
+							[
+								SNew(STextBlock)
+								.TextStyle(FEditorStyle::Get(), "OutputLog.Filters.Text")
+								.Font(FEditorStyle::Get().GetFontStyle("FontAwesome.9"))
+								.Text(FText::FromString(FString(TEXT("\xf0b0"))) /*fa-filter*/)
+							]
 
-            + SHorizontalBox::Slot()
-        .AutoWidth()
-        [
-            SNew(STextBlock)
-            .TextStyle(FEditorStyle::Get(), "OutputLog.Filters.Text")
-        .Font(FEditorStyle::Get().GetFontStyle("FontAwesome.9"))
-        .Text(FText::FromString(FString(TEXT("\xf0b0"))) /*fa-filter*/)
-        ]
+							+SHorizontalBox::Slot()
+							.AutoWidth()
+							.Padding(2, 0, 0, 0)
+							[
+								SNew(STextBlock)
+								.TextStyle(FEditorStyle::Get(), "OutputLog.Filters.Text")
+								.Text(LOCTEXT("Filters", "Filters"))
+							]
+						]
+					]
 
-    + SHorizontalBox::Slot()
-        .AutoWidth()
-        .Padding(2, 0, 0, 0)
-        [
-            SNew(STextBlock)
-            .TextStyle(FEditorStyle::Get(), "OutputLog.Filters.Text")
-        .Text(LOCTEXT("Filters", "Filters"))
-        ]
-        ]
-        ]
+					+SHorizontalBox::Slot()
+					.Padding(4, 1, 0, 0)
+					[
+						SAssignNew(FilterTextBox, SSearchBox)
+						.HintText(LOCTEXT("SearchLogHint", "Search Log"))
+						.OnTextChanged(this, &SOutputLog::OnFilterTextChanged)
+						.DelayChangeNotificationsWhileTyping(true)
+					]
+				]
 
-    + SHorizontalBox::Slot()
-        .Padding(4, 1, 0, 0)
-        [
-            SAssignNew(FilterTextBox, SSearchBox)
-            .HintText(LOCTEXT("SearchLogHint", "Search Log"))
-        .OnTextChanged(this, &SOutputLog::OnFilterTextChanged)
-        .DelayChangeNotificationsWhileTyping(true)
-        ]
-        ]
+				// Output log area
+				+SVerticalBox::Slot()
+				.FillHeight(1)
+				[
+					MessagesTextBox.ToSharedRef()
+				]
+			]
+		]
 
-    // Output log area
-    + SVerticalBox::Slot()
-        .FillHeight(1)
-        [
-            MessagesTextBox.ToSharedRef()
-        ]
-        ]
-        ]
+		// The console input box
+		+SVerticalBox::Slot()
+		.AutoHeight()
+		.Padding(FMargin(0.0f, 4.0f, 0.0f, 0.0f))
+		[
+			SNew(SConsoleInputBox)
+			.OnConsoleCommandExecuted(this, &SOutputLog::OnConsoleCommandExecuted)
 
-    // The console input box
-    + SVerticalBox::Slot()
-        .AutoHeight()
-        .Padding(FMargin(0.0f, 4.0f, 0.0f, 0.0f))
-        [
-            SNew(SConsoleInputBox)
-            .OnConsoleCommandExecuted(this, &SOutputLog::OnConsoleCommandExecuted)
-
-        // Always place suggestions above the input line for the output log widget
-        .SuggestionListPlacement(MenuPlacement_AboveAnchor)
-        ]
-        ];
+			// Always place suggestions above the input line for the output log widget
+			.SuggestionListPlacement(MenuPlacement_AboveAnchor)
+		]
+	];
 
     GLog->AddOutputDevice(this);
 
