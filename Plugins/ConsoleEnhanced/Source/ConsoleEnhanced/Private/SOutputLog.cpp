@@ -614,6 +614,16 @@ bool FOutputLogTextLayoutMarshaller::AppendMessage(const TCHAR* InText, const EL
     if (SOutputLog::CreateLogMessages(InText, InVerbosity, InCategory, Time, NewMessages))
     {
         const bool bWasEmpty = Messages.Num() == 0;
+
+        if (NewMessages.Num() == 1 && Messages.Num() > 0) {
+            const auto& PrevMessage = Messages.Last();
+            if (NewMessages[0]->Message->Equals(*PrevMessage->Message)) {
+                PrevMessage->Count += 1;
+                TextLayout->DirtyLayout();
+                TextLayout->RemoveLine(TextLayout->GetLineModels().Num() - 1);
+                NewMessages[0] = Messages.Pop(false);
+            }
+        }
         Messages.Append(NewMessages);
 
         if (TextLayout)
@@ -725,9 +735,21 @@ void FOutputLogTextLayoutMarshaller::AppendMessagesToTextLayout(const TArray<TSh
         // Increment the cached count
         CachedNumMessages++;
 
+        TArray<TSharedRef<IRun>> Runs;
         const FTextBlockStyle& MessageTextStyle = GetStyle(CurrentMessage->Style);
         TSharedRef<FString> LineText = CurrentMessage->Message;
-        TArray<TSharedRef<IRun>> Runs;
+        int32 startOffset = 0;
+        if (CurrentMessage->Count > 1) {
+            FString* newLine = new FString("{");
+            newLine->AppendInt(CurrentMessage->Count);
+            newLine->Append("} ");
+            startOffset = newLine->Len();
+            newLine->Append(*LineText);
+            LineText = MakeShareable(newLine);
+            const FTextBlockStyle& CountTextStyle = FTextBlockStyle(MessageTextStyle).SetColorAndOpacity(FSlateColor(FLinearColor(0.9, 0.1, 0.7)));
+            TSharedRef<FSlateTextRun> textRun = FSlateTextRun::Create(FRunInfo(), LineText, CountTextStyle, FTextRange(0, startOffset));
+            Runs.Add(textRun);
+        }
 
         FHyperlinkStyle linkStyle = FEditorStyle::Get().GetWidgetStyle<FHyperlinkStyle>(FName(TEXT("NavigationHyperlink")));
         linkStyle.SetTextStyle(MessageTextStyle);
@@ -735,16 +757,13 @@ void FOutputLogTextLayoutMarshaller::AppendMessagesToTextLayout(const TArray<TSh
         TSet<FTextRange> foundLinkRanges;
         auto hyperlinkRuns = CreateBlueprintHyperlinks(blueprints, foundLinkRanges, LineText, linkStyle);
         CreateFilepathHyperlinks(LineText, foundLinkRanges, linkStyle, hyperlinkRuns);
-
-
         CreateUrlHyperlinks(LineText, foundLinkRanges, linkStyle, hyperlinkRuns);
 
-
         if (hyperlinkRuns.empty()) {
-            Runs.Add(FSlateTextRun::Create(FRunInfo(), LineText, MessageTextStyle));
+            Runs.Add(FSlateTextRun::Create(FRunInfo(), LineText, MessageTextStyle, FTextRange(startOffset, LineText->Len())));
         }
         else {
-            int32 lastIndex = 0;
+            int32 lastIndex = startOffset;
             for (auto run : hyperlinkRuns) {
                 if (lastIndex < run.first) {
                     TSharedRef<FSlateTextRun> textRun = FSlateTextRun::Create(FRunInfo(), LineText, MessageTextStyle, FTextRange(lastIndex, run.first));
@@ -896,7 +915,7 @@ FTextBlockStyle FOutputLogTextLayoutMarshaller::GetStyle(FName StyleName) const
 {
     return FTextBlockStyle(FEditorStyle::Get().GetWidgetStyle<FTextBlockStyle>(StyleName))
         .SetShadowColorAndOpacity(FLinearColor::Black)
-        .SetShadowOffset(FVector2D(0.5, 0.5));
+        .SetShadowOffset(FVector2D(1, 1));
 }
 
 bool FOutputLogTextLayoutMarshaller::overlapping(const FTextRange& testRange, const TSet<FTextRange>& ranges)

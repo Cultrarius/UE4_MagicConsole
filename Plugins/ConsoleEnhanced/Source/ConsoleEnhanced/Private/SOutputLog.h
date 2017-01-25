@@ -19,6 +19,7 @@ struct FLogMessage
 	TSharedRef<FString> Message;
 	ELogVerbosity::Type Verbosity;
 	FName Style;
+    int32 Count = 1;
 
 	FLogMessage(const TSharedRef<FString>& NewMessage, FName NewStyle = NAME_None)
 		: Message(NewMessage)
