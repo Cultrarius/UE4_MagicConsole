@@ -147,9 +147,12 @@ struct FLogFilter
 	/** true to show Errors. */
 	bool bShowErrors;
 
-    /** true to show Logs. */
+    /** true to use Regex search. */
     bool bUseRegex = true;
     bool bIsRegexValid = false;
+
+    /** true to collapse repeated messages. */
+    bool bCollapsedMode = true;
 
 	/** Enable all filters by default */
 	FLogFilter() : TextFilterExpressionEvaluator(ETextFilterExpressionEvaluatorMode::BasicString)
@@ -319,8 +322,14 @@ private:
     /** Toggles "Regex" true/false. */
     void MenuRegex_Execute();
 
-    /** Returns the state of "Errors". */
+    /** Returns the state of "Regex". */
     bool MenuRegex_IsChecked() const;
+
+    /** Toggles "Collapsed" true/false. */
+    void MenuCollapsed_Execute();
+
+    /** Returns the state of "Collapsed". */
+    bool MenuCollapsed_IsChecked() const;
 
 	/** Forces re-population of the messages list */
 	void Refresh();

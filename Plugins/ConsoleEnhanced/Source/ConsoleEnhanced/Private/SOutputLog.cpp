@@ -615,7 +615,7 @@ bool FOutputLogTextLayoutMarshaller::AppendMessage(const TCHAR* InText, const EL
     {
         const bool bWasEmpty = Messages.Num() == 0;
 
-        if (NewMessages.Num() == 1 && Messages.Num() > 0) {
+        if (Filter->bCollapsedMode && NewMessages.Num() == 1 && Messages.Num() > 0) {
             const auto& PrevMessage = Messages.Last();
             if (NewMessages[0]->Message->Equals(*PrevMessage->Message)) {
                 PrevMessage->Count += 1;
@@ -1303,6 +1303,17 @@ TSharedRef<SWidget> SOutputLog::MakeAddFilterMenu()
             NAME_None,
             EUserInterfaceActionType::ToggleButton
         );
+
+        MenuBuilder.AddMenuEntry(
+            LOCTEXT("CollapseMessages", "Collapse Mode"),
+            LOCTEXT("CollapseMessages_Tooltip", "Collapses adjacent identical messages into a single line"),
+            FSlateIcon(),
+            FUIAction(FExecuteAction::CreateSP(this, &SOutputLog::MenuCollapsed_Execute),
+                FCanExecuteAction::CreateSP(this, &SOutputLog::Menu_CanExecute),
+                FIsActionChecked::CreateSP(this, &SOutputLog::MenuCollapsed_IsChecked)),
+            NAME_None,
+            EUserInterfaceActionType::ToggleButton
+        );
     }
     MenuBuilder.EndSection();
 
@@ -1372,6 +1383,20 @@ bool SOutputLog::MenuErrors_IsChecked() const
 bool SOutputLog::MenuRegex_IsChecked() const
 {
     return Filter.bUseRegex;
+}
+
+bool SOutputLog::MenuCollapsed_IsChecked() const
+{
+    return Filter.bCollapsedMode;
+}
+
+void SOutputLog::MenuCollapsed_Execute()
+{
+    Filter.bCollapsedMode = !Filter.bCollapsedMode;
+
+    // Flag the messages count as dirty
+    MessagesTextMarshaller->MarkMessagesCacheAsDirty();
+    Refresh();
 }
 
 void SOutputLog::MenuRegex_Execute()
