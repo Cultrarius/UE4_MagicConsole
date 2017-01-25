@@ -4,6 +4,7 @@
 #include "BaseTextLayoutMarshaller.h"
 #include "TextFilterExpressionEvaluator.h"
 #include "Regex.h"
+#include <map>
 
 class FOutputLogTextLayoutMarshaller;
 class SSearchBox;
@@ -329,6 +330,9 @@ protected:
 	void AppendMessageToTextLayout(const TSharedPtr<FLogMessage>& InMessage);
 	void AppendMessagesToTextLayout(const TArray<TSharedPtr<FLogMessage>>& InMessages);
 
+    std::map<int32, TSharedRef<FSlateHyperlinkRun>> CreateBlueprintHyperlinks(const TArray<UBlueprint*>& blueprints, TSet<FTextRange>& foundLinkRanges,
+        TSharedRef<FString> LineText, FHyperlinkStyle LinkStyle) const;
+
     FTextBlockStyle GetStyle(FName StyleName) const;
 
 	/** All log messages to show in the text box */
@@ -345,5 +349,6 @@ protected:
 
 	FTextLayout* TextLayout;
 
-    TSharedPtr<FSlateBrush> TextUnderlineBrush;
+    FRegexPattern UrlPattern;
+    FRegexPattern FilePathPattern;
 };
