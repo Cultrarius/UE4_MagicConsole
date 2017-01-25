@@ -818,7 +818,7 @@ void FOutputLogTextLayoutMarshaller::AppendMessagesToTextLayout(const TArray<TSh
                     Runs.Add(textRun);
                 }
                 Runs.Add(run.second);
-                lastIndex = run.first;
+                lastIndex = run.second->GetTextRange().EndIndex;
             }
             if (lastIndex < LineText->Len()) {
                 TSharedRef<FSlateTextRun> textRun = FSlateTextRun::Create(FRunInfo(), LineText, MessageTextStyle, FTextRange(lastIndex, LineText->Len()));
