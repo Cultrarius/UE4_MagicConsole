@@ -7,6 +7,7 @@
 #include <map>
 #include <regex>
 #include "SlateTextLayout.h"
+#include "LogDisplaySettings.h"
 
 class FOutputLogTextLayoutMarshaller;
 class SSearchBox;
@@ -171,8 +172,8 @@ struct FLogFilter
 	void SetFilterText(const FText& InFilterText) {
         TextFilterExpressionEvaluator.SetFilterText(InFilterText);
 
-        FString regexFilter = InFilterText.ToString();
         if (bUseRegex) {
+            FString regexFilter = InFilterText.ToString();
             try {
                 searchRegex = std::regex(TCHAR_TO_ANSI(*regexFilter), std::regex_constants::nosubs |
                     std::regex_constants::icase | std::regex_constants::optimize);
@@ -381,8 +382,8 @@ protected:
 	void AppendMessageToTextLayout(const TSharedPtr<FLogMessage>& InMessage);
 	void AppendMessagesToTextLayout(const TArray<TSharedPtr<FLogMessage>>& InMessages);
 
-    std::map<int32, TSharedRef<FSlateHyperlinkRun>> CreateBlueprintHyperlinks(const TArray<UBlueprint*>& blueprints, TSet<FTextRange>& foundLinkRanges,
-        TSharedRef<FString> LineText, FHyperlinkStyle LinkStyle) const;
+    void CreateBlueprintHyperlinks(const TArray<UBlueprint*>& blueprints, TSet<FTextRange>& foundLinkRanges,
+        TSharedRef<FString> LineText, FHyperlinkStyle LinkStyle, std::map<int32, TSharedRef<FSlateHyperlinkRun>> &hyperlinkRuns) const;
 
     void CreateFilepathHyperlinks(TSharedRef<FString> LineText, TSet<FTextRange> &foundLinkRanges, FHyperlinkStyle linkStyle,
         std::map<int32, TSharedRef<FSlateHyperlinkRun>> &hyperlinkRuns) const;
@@ -390,7 +391,7 @@ protected:
     void CreateUrlHyperlinks(TSharedRef<FString> LineText, TSet<FTextRange> &foundLinkRanges, FHyperlinkStyle linkStyle,
         std::map<int32, TSharedRef<FSlateHyperlinkRun>> &hyperlinkRuns) const;
 
-    FTextBlockStyle GetStyle(FName StyleName) const;
+    FTextBlockStyle GetStyle(const TSharedPtr<FLogMessage>& Message, const ULogDisplaySettings* StyleSettings) const;
 
 	/** All log messages to show in the text box */
 	TArray< TSharedPtr<FLogMessage> > Messages;

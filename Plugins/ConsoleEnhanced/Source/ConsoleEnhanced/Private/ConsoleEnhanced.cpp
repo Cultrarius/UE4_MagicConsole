@@ -5,6 +5,8 @@
 #include "SDebugConsole.h"
 #include "Editor/WorkspaceMenuStructure/Public/WorkspaceMenuStructureModule.h"
 #include "SDockTab.h"
+#include "LogDisplaySettings.h"
+#include "ISettingsModule.h"
 
 #define LOCTEXT_NAMESPACE "FConsoleEnhancedModule"
 
@@ -78,6 +80,16 @@ TSharedRef<SDockTab> SpawnOutputLog(const FSpawnTabArgs& Args)
 
 void FConsoleEnhancedModule::StartupModule()
 {
+    ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings");
+    if (SettingsModule)
+    {
+        auto SavedSettings = GetMutableDefault<ULogDisplaySettings>();
+        SettingsModule->RegisterSettings("Project", "Plugins", "OutputLog Pro",
+            LOCTEXT("RuntimeSettingsName", "OutputLog Pro"),
+            LOCTEXT("RuntimeSettingsDescription", "Dsiplay settings for the enchanced ouput log."),
+            SavedSettings);
+    }
+
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(OutputLogModule::OutputLogTabName, FOnSpawnTab::CreateStatic(&SpawnOutputLog))
         .SetDisplayName(NSLOCTEXT("UnrealEditor", "OutputLogPlusTab", "Enhanced Output Log"))
         .SetTooltipText(NSLOCTEXT("UnrealEditor", "OutputLogPlusTooltipText", "Open the Output Log tab."))
@@ -110,6 +122,12 @@ void FConsoleEnhancedModule::ShutdownModule()
     if (FSlateApplication::IsInitialized())
     {
         FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(OutputLogModule::OutputLogTabName);
+    }
+
+    ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings");
+    if (SettingsModule)
+    {
+        SettingsModule->UnregisterSettings("Project", "Plugins", "OutputLog Pro");
     }
 }
 

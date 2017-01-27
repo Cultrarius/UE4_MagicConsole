@@ -733,9 +733,10 @@ void FOutputLogTextLayoutMarshaller::AppendMessagesToTextLayout(const TArray<TSh
         // Increment the cached count
         CachedNumMessages++;
 
+        auto StyleSettings = GetDefault<ULogDisplaySettings>();
         TArray<TSharedRef<IRun>> Runs;
-        const FTextBlockStyle& MessageTextStyle = GetStyle(CurrentMessage->Style);
         TSharedRef<FString> LineText = CurrentMessage->Message;
+        const FTextBlockStyle& MessageTextStyle = GetStyle(CurrentMessage, StyleSettings);
         int32 startOffset = 0;
         if (CurrentMessage->Count > 1) {
             FString* newLine = new FString("{");
@@ -744,7 +745,7 @@ void FOutputLogTextLayoutMarshaller::AppendMessagesToTextLayout(const TArray<TSh
             startOffset = newLine->Len();
             newLine->Append(*LineText);
             LineText = MakeShareable(newLine);
-            const FTextBlockStyle& CountTextStyle = FTextBlockStyle(MessageTextStyle).SetColorAndOpacity(FSlateColor(FLinearColor(0.9, 0.1, 0.7)));
+            const FTextBlockStyle& CountTextStyle = FTextBlockStyle(MessageTextStyle).SetColorAndOpacity(FSlateColor(StyleSettings->CollapsedLineCounterColor));
             TSharedRef<FSlateTextRun> textRun = FSlateTextRun::Create(FRunInfo(), LineText, CountTextStyle, FTextRange(0, startOffset));
             Runs.Add(textRun);
         }
@@ -753,9 +754,16 @@ void FOutputLogTextLayoutMarshaller::AppendMessagesToTextLayout(const TArray<TSh
         linkStyle.SetTextStyle(MessageTextStyle);
 
         TSet<FTextRange> foundLinkRanges;
-        auto hyperlinkRuns = CreateBlueprintHyperlinks(blueprints, foundLinkRanges, LineText, linkStyle);
-        CreateFilepathHyperlinks(LineText, foundLinkRanges, linkStyle, hyperlinkRuns);
-        CreateUrlHyperlinks(LineText, foundLinkRanges, linkStyle, hyperlinkRuns);
+        map<int32, TSharedRef<FSlateHyperlinkRun>> hyperlinkRuns;
+        if (StyleSettings->bParseBlueprintLinks) {
+            CreateBlueprintHyperlinks(blueprints, foundLinkRanges, LineText, linkStyle, hyperlinkRuns);
+        }
+        if (StyleSettings->bParseFilePaths) {
+            CreateFilepathHyperlinks(LineText, foundLinkRanges, linkStyle, hyperlinkRuns);
+        }
+        if (StyleSettings->bParseHyperlinks) {
+            CreateUrlHyperlinks(LineText, foundLinkRanges, linkStyle, hyperlinkRuns);
+        }
 
         if (hyperlinkRuns.empty()) {
             Runs.Add(FSlateTextRun::Create(FRunInfo(), LineText, MessageTextStyle, FTextRange(startOffset, LineText->Len())));
@@ -847,9 +855,8 @@ void FOutputLogTextLayoutMarshaller::CreateFilepathHyperlinks(TSharedRef<FString
     }
 }
 
-map<int32, TSharedRef<FSlateHyperlinkRun>> FOutputLogTextLayoutMarshaller::CreateBlueprintHyperlinks(const TArray<UBlueprint*>& blueprints, TSet<FTextRange>& foundLinkRanges, TSharedRef<FString> LineText, FHyperlinkStyle linkStyle) const
+void FOutputLogTextLayoutMarshaller::CreateBlueprintHyperlinks(const TArray<UBlueprint*>& blueprints, TSet<FTextRange>& foundLinkRanges, TSharedRef<FString> LineText, FHyperlinkStyle linkStyle, map<int32, TSharedRef<FSlateHyperlinkRun>> &hyperlinkRuns) const
 {
-    map<int32, TSharedRef<FSlateHyperlinkRun>> hyperlinkRuns;
     for (UBlueprint* bp : blueprints) {
         auto pathName = bp->GeneratedClass->GetPathName();
 
@@ -906,14 +913,57 @@ map<int32, TSharedRef<FSlateHyperlinkRun>> FOutputLogTextLayoutMarshaller::Creat
             foundLinkRanges.Add(newRange);
         }
     }
-    return hyperlinkRuns;
 }
 
-FTextBlockStyle FOutputLogTextLayoutMarshaller::GetStyle(FName StyleName) const
+
+FTextBlockStyle FOutputLogTextLayoutMarshaller::GetStyle(const TSharedPtr<FLogMessage>& Message, const ULogDisplaySettings* StyleSettings) const
 {
-    return FTextBlockStyle(FEditorStyle::Get().GetWidgetStyle<FTextBlockStyle>(StyleName))
-        .SetShadowColorAndOpacity(FLinearColor::Black)
-        .SetShadowOffset(FVector2D(1, 1));
+    auto style = FTextBlockStyle(FEditorStyle::Get().GetWidgetStyle<FTextBlockStyle>(Message->Style));
+    if (StyleSettings->bDisplayTextShadow) {
+        style
+            .SetShadowColorAndOpacity(StyleSettings->ShadowColor)
+            .SetShadowOffset(StyleSettings->ShadowOffset);
+    }
+    else {
+        style
+            .SetShadowColorAndOpacity(FLinearColor::Transparent)
+            .SetShadowOffset(FVector2D::ZeroVector);
+    }
+    if (StyleSettings->bDisplayOutline) {
+        style.Font.OutlineSettings.OutlineColor = StyleSettings->OutlineColor;
+        style.Font.OutlineSettings.OutlineSize = StyleSettings->OutlineSize;
+    }
+    for (const FLogCategorySetting& logCategory : StyleSettings->LogCategories) {
+        if (logCategory.CategorySearchString.IsEmpty()) {
+            continue;
+        }
+        bool isMatch = false;
+        if (logCategory.SearchAsRegex) {
+            try {
+                regex searchPattern(TCHAR_TO_ANSI(*logCategory.CategorySearchString), regex_constants::nosubs | regex_constants::icase);
+                smatch matcher;
+                string msg(TCHAR_TO_ANSI(*(*Message->Message)));
+                isMatch = regex_search(msg, matcher, searchPattern);
+            }
+            catch (std::regex_error&) {
+                // just ignore the log category
+            }
+        }
+        else {
+            FTextFilterExpressionEvaluator evaluator(ETextFilterExpressionEvaluatorMode::BasicString);
+            evaluator.SetFilterText(FText::FromString(logCategory.CategorySearchString));
+            isMatch = evaluator.TestTextFilter(FLogFilter_TextFilterExpressionContext(*Message));
+        }
+
+        if (isMatch) {
+            style.ColorAndOpacity = FSlateColor(logCategory.TextColor);
+            if (StyleSettings->bDisplayTextShadow) {
+                style.ShadowColorAndOpacity = logCategory.ShadowColor;
+            }
+            break;
+        }
+    }
+    return style;
 }
 
 bool FOutputLogTextLayoutMarshaller::overlapping(const FTextRange& testRange, const TSet<FTextRange>& ranges)
