@@ -231,11 +231,6 @@ void SConsoleInputBox::SuggestionSelectionChanged(TSharedPtr<FString> NewValue, 
             {
                 SuggestionBox->SetIsOpen(false);
             }
-
-            // Ideally this would set the focus back to the edit control
-//			FWidgetPath WidgetToFocusPath;
-//			FSlateApplication::Get().GeneratePathToWidgetUnchecked( InputText.ToSharedRef(), WidgetToFocusPath );
-//			FSlateApplication::Get().SetKeyboardFocus( WidgetToFocusPath, EFocusCause::SetDirectly );
             break;
         }
     }
@@ -599,7 +594,7 @@ FOutputLogTextLayoutMarshaller::~FOutputLogTextLayoutMarshaller()
 
 void FOutputLogTextLayoutMarshaller::SetText(const FString& SourceString, FTextLayout& TargetTextLayout)
 {
-    TextLayout = &TargetTextLayout;
+    TextLayout = (FCustomTextLayout*)&TargetTextLayout;
     AppendMessagesToTextLayout(Messages);
 }
 
@@ -616,11 +611,14 @@ bool FOutputLogTextLayoutMarshaller::AppendMessage(const TCHAR* InText, const EL
         const bool bWasEmpty = Messages.Num() == 0;
 
         if (Filter->bCollapsedMode && NewMessages.Num() == 1 && Messages.Num() > 0) {
-            const auto& PrevMessage = Messages.Last();
+            auto PrevMessage = Messages.Last();
             if (NewMessages[0]->Message->Equals(*PrevMessage->Message)) {
                 PrevMessage->Count += 1;
-                TextLayout->DirtyLayout();
-                TextLayout->RemoveLine(TextLayout->GetLineModels().Num() - 1);
+                if (Filter->IsMessageAllowed(PrevMessage))
+                {
+                    TextLayout->RemoveSingleLineFromLayout();
+                    TextLayout->RemoveLine(TextLayout->GetLineModels().Num() - 1);
+                }
                 NewMessages[0] = Messages.Pop(false);
             }
         }
@@ -997,6 +995,33 @@ FOutputLogTextLayoutMarshaller::FOutputLogTextLayoutMarshaller(TArray< TSharedPt
 {
 }
 
+#include <iostream>
+
+
+
+TSharedRef<FSlateTextLayout> FCustomTextLayout::CreateLayout(FTextBlockStyle InDefaultTextStyle)
+{
+    TSharedRef< FCustomTextLayout > Layout = MakeShareable(new FCustomTextLayout(MoveTemp(InDefaultTextStyle)));
+    Layout->AggregateChildren();
+    return Layout;
+}
+
+
+FCustomTextLayout::FCustomTextLayout(FTextBlockStyle InDefaultTextStyle) : FSlateTextLayout(MoveTemp(InDefaultTextStyle)) {
+
+}
+
+void FCustomTextLayout::RemoveSingleLineFromLayout()
+{
+    if (LineViews.Num() == 0) {
+        return;
+    }
+    TextLayoutSize.Height -= LineViews.Last().Size.Y;
+    if (TextLayoutSize.Height < 0) {
+        TextLayoutSize.Height = 0;
+    }
+}
+
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SOutputLog::Construct(const FArguments& InArgs)
 {
@@ -1010,6 +1035,7 @@ void SOutputLog::Construct(const FArguments& InArgs)
         .IsReadOnly(true)
         .AlwaysShowScrollbars(true)
         .OnVScrollBarUserScrolled(this, &SOutputLog::OnUserScrolled)
+        .CreateSlateTextLayout(FCreateSlateTextLayout::CreateStatic(&FCustomTextLayout::CreateLayout))
         .ContextMenuExtender(this, &SOutputLog::ExtendTextBoxMenu);
 
     ChildSlot
@@ -1483,3 +1509,4 @@ FText FLogFilter::getInValidRegexText()
 }
 
 #undef LOCTEXT_NAMESPACE
+

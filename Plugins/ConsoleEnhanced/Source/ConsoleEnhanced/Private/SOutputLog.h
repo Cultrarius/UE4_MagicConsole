@@ -6,6 +6,7 @@
 #include "Regex.h"
 #include <map>
 #include <regex>
+#include "SlateTextLayout.h"
 
 class FOutputLogTextLayoutMarshaller;
 class SSearchBox;
@@ -203,6 +204,17 @@ private:
     FText getInValidRegexText();
 };
 
+class FCustomTextLayout : public FSlateTextLayout
+{
+public:
+    static TSharedRef<FSlateTextLayout> CreateLayout(FTextBlockStyle InDefaultTextStyle);
+
+    void RemoveSingleLineFromLayout();
+
+protected:
+    FCustomTextLayout(FTextBlockStyle InDefaultTextStyle);
+};
+
 /**
  * Widget which holds a list view of logs of the program output
  * as well as a combo box for entering in new commands
@@ -392,7 +404,7 @@ protected:
 	/** Visible messages filter */
 	FLogFilter* Filter;
 
-	FTextLayout* TextLayout;
+    FCustomTextLayout* TextLayout;
 
     FRegexPattern UrlPattern;
     FRegexPattern FilePathPattern;
