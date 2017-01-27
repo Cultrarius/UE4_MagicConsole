@@ -1,10 +1,8 @@
 // Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
 
 #include "ConsoleEnhancedPrivatePCH.h"
-#include "ConsoleEnhancedEdMode.h"
 #include "SOutputLog.h"
 #include "SDebugConsole.h"
-#include "SDeviceOutputLog.h"
 #include "Editor/WorkspaceMenuStructure/Public/WorkspaceMenuStructureModule.h"
 #include "SDockTab.h"
 
@@ -13,7 +11,9 @@
 namespace OutputLogModule
 {
     static const FName OutputLogTabName = FName(TEXT("OutputLogPlus"));
-    static const FName DeviceOutputLogTabName = FName(TEXT("DeviceOutputLogPlus"));
+    static const FName OutputLogTabName2 = FName(TEXT("OutputLogPlus2"));
+    static const FName OutputLogTabName3 = FName(TEXT("OutputLogPlus3"));
+    static const FName OutputLogTabName4 = FName(TEXT("OutputLogPlus4"));
 }
 
 /** This class is to capture all log output even if the log window is closed */
@@ -76,34 +76,31 @@ TSharedRef<SDockTab> SpawnOutputLog(const FSpawnTabArgs& Args)
         ];
 }
 
-TSharedRef<SDockTab> SpawnDeviceOutputLog(const FSpawnTabArgs& Args)
-{
-    return SNew(SDockTab)
-        .Icon(FEditorStyle::GetBrush("Log.TabIcon"))
-        .TabRole(ETabRole::NomadTab)
-        .Label(NSLOCTEXT("OutputLogPlus", "DeviceTabTitle", "Enhanced Device Output Log"))
-        [
-            SNew(SDeviceOutputLog)
-        ];
-}
-
 void FConsoleEnhancedModule::StartupModule()
 {
-	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
-	FEditorModeRegistry::Get().RegisterMode<FConsoleEnhancedEdMode>(FConsoleEnhancedEdMode::EM_ConsoleEnhancedEdModeId, LOCTEXT("ConsoleEnhancedEdModeName", "ConsoleEnhancedEdMode"), FSlateIcon(), true);
-
-    FGlobalTabmanager::Get()->RegisterNomadTabSpawner(OutputLogModule::OutputLogTabName, FOnSpawnTab::CreateStatic(&SpawnOutputLog))
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(OutputLogModule::OutputLogTabName, FOnSpawnTab::CreateStatic(&SpawnOutputLog))
         .SetDisplayName(NSLOCTEXT("UnrealEditor", "OutputLogPlusTab", "Enhanced Output Log"))
         .SetTooltipText(NSLOCTEXT("UnrealEditor", "OutputLogPlusTooltipText", "Open the Output Log tab."))
         .SetGroup(WorkspaceMenu::GetMenuStructure().GetDeveloperToolsLogCategory())
         .SetIcon(FSlateIcon(FEditorStyle::GetStyleSetName(), "Log.TabIcon"));
 
-    FGlobalTabmanager::Get()->RegisterNomadTabSpawner(OutputLogModule::DeviceOutputLogTabName, FOnSpawnTab::CreateStatic(&SpawnDeviceOutputLog))
-        .SetDisplayName(NSLOCTEXT("UnrealEditor", "DeviceOutputLogPlusTab", "Enhanced Device Output Log"))
-        .SetTooltipText(NSLOCTEXT("UnrealEditor", "DeviceOutputLogPlusTooltipText", "Open the Device Output Log tab."))
+    FGlobalTabmanager::Get()->RegisterNomadTabSpawner(OutputLogModule::OutputLogTabName2, FOnSpawnTab::CreateStatic(&SpawnOutputLog))
+        .SetDisplayName(NSLOCTEXT("UnrealEditor", "OutputLogPlusTab2", "Enhanced Output Log (Window 2)"))
+        .SetTooltipText(NSLOCTEXT("UnrealEditor", "OutputLogPlusTooltipText", "Open the Output Log tab."))
         .SetGroup(WorkspaceMenu::GetMenuStructure().GetDeveloperToolsLogCategory())
-        .SetIcon(FSlateIcon(FEditorStyle::GetStyleSetName(), "Log.TabIcon"))
-        .SetAutoGenerateMenuEntry(false); // remove once not Experimental
+        .SetIcon(FSlateIcon(FEditorStyle::GetStyleSetName(), "Log.TabIcon"));
+
+    FGlobalTabmanager::Get()->RegisterNomadTabSpawner(OutputLogModule::OutputLogTabName3, FOnSpawnTab::CreateStatic(&SpawnOutputLog))
+        .SetDisplayName(NSLOCTEXT("UnrealEditor", "OutputLogPlusTab3", "Enhanced Output Log (Window 3)"))
+        .SetTooltipText(NSLOCTEXT("UnrealEditor", "OutputLogPlusTooltipText", "Open the Output Log tab."))
+        .SetGroup(WorkspaceMenu::GetMenuStructure().GetDeveloperToolsLogCategory())
+        .SetIcon(FSlateIcon(FEditorStyle::GetStyleSetName(), "Log.TabIcon"));
+
+    FGlobalTabmanager::Get()->RegisterNomadTabSpawner(OutputLogModule::OutputLogTabName4, FOnSpawnTab::CreateStatic(&SpawnOutputLog))
+        .SetDisplayName(NSLOCTEXT("UnrealEditor", "OutputLogPlusTab4", "Enhanced Output Log (Window 4)"))
+        .SetTooltipText(NSLOCTEXT("UnrealEditor", "OutputLogPlusTooltipText", "Open the Output Log tab."))
+        .SetGroup(WorkspaceMenu::GetMenuStructure().GetDeveloperToolsLogCategory())
+        .SetIcon(FSlateIcon(FEditorStyle::GetStyleSetName(), "Log.TabIcon"));
 
     OutputLogHistory = MakeShareable(new FOutputLogHistory);
 }
@@ -113,12 +110,7 @@ void FConsoleEnhancedModule::ShutdownModule()
     if (FSlateApplication::IsInitialized())
     {
         FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(OutputLogModule::OutputLogTabName);
-        FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(OutputLogModule::DeviceOutputLogTabName);
     }
-
-	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
-	// we call this function before unloading the module.
-	FEditorModeRegistry::Get().UnregisterMode(FConsoleEnhancedEdMode::EM_ConsoleEnhancedEdModeId);
 }
 
 TSharedRef< SWidget > FConsoleEnhancedModule::MakeConsoleInputBox(TSharedPtr< SEditableTextBox >& OutExposedEditableTextBox) const
