@@ -156,10 +156,16 @@ struct FLogFilter
     /** true to collapse repeated messages. */
     bool bCollapsedMode = true;
 
+    /** true to filter common messages. */
+    bool bAntiSpamMode = true;
+
 	/** Enable all filters by default */
 	FLogFilter() : TextFilterExpressionEvaluator(ETextFilterExpressionEvaluatorMode::BasicString)
 	{
 		bShowErrors = bShowLogs = bShowWarnings = true;
+
+        const auto Settings = GetDefault<ULogDisplaySettings>();
+        antiSpamRegex = std::regex(TCHAR_TO_ANSI(*Settings->AntiSpamRegex), std::regex_constants::nosubs | std::regex_constants::optimize);
 	}
 
 	/** Returns true if any messages should be filtered out */
@@ -202,6 +208,7 @@ private:
 
     std::regex searchRegex;
     std::regex lastValidRegex;
+    std::regex antiSpamRegex;
     FText getInValidRegexText();
 };
 
@@ -343,6 +350,12 @@ private:
 
     /** Returns the state of "Collapsed". */
     bool MenuCollapsed_IsChecked() const;
+
+    /** Toggles "AntiSpam" true/false. */
+    void MenuAntiSpam_Execute();
+
+    /** Returns the state of "AntiSpam". */
+    bool MenuAntiSpam_IsChecked() const;
 
 	/** Forces re-population of the messages list */
 	void Refresh();

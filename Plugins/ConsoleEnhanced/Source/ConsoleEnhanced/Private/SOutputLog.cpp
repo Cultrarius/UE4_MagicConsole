@@ -1390,6 +1390,17 @@ TSharedRef<SWidget> SOutputLog::MakeAddFilterMenu()
             NAME_None,
             EUserInterfaceActionType::ToggleButton
         );
+
+        MenuBuilder.AddMenuEntry(
+            LOCTEXT("AntiSpamMessages", "Anti Spam Mode"),
+            LOCTEXT("AntiSpamMessages_Tooltip", "Filters out common and uninteresting log messages"),
+            FSlateIcon(),
+            FUIAction(FExecuteAction::CreateSP(this, &SOutputLog::MenuAntiSpam_Execute),
+                FCanExecuteAction::CreateSP(this, &SOutputLog::Menu_CanExecute),
+                FIsActionChecked::CreateSP(this, &SOutputLog::MenuAntiSpam_IsChecked)),
+            NAME_None,
+            EUserInterfaceActionType::ToggleButton
+        );
     }
     MenuBuilder.EndSection();
 
@@ -1466,6 +1477,20 @@ bool SOutputLog::MenuCollapsed_IsChecked() const
     return Filter.bCollapsedMode;
 }
 
+bool SOutputLog::MenuAntiSpam_IsChecked() const
+{
+    return Filter.bAntiSpamMode;
+}
+
+void SOutputLog::MenuAntiSpam_Execute()
+{
+    Filter.bAntiSpamMode = !Filter.bAntiSpamMode;
+
+    // Flag the messages count as dirty
+    MessagesTextMarshaller->MarkMessagesCacheAsDirty();
+    Refresh();
+}
+
 void SOutputLog::MenuCollapsed_Execute()
 {
     Filter.bCollapsedMode = !Filter.bCollapsedMode;
@@ -1531,23 +1556,29 @@ bool FLogFilter::IsMessageAllowed(const TSharedPtr<FLogMessage>& Message)
         }
     }
 
-    // Filter search phrase
-    {
-
-        if (bUseRegex) {
-            if (TextFilterExpressionEvaluator.GetFilterText().IsEmpty()) {
-                return true;
-            }
-            smatch matcher;
-            string msg(TCHAR_TO_ANSI(*(*Message->Message)));
-            if (!regex_search(msg, matcher, bIsRegexValid ? searchRegex : lastValidRegex)) {
-                return false;
-            }
-        } 
-        else if (!TextFilterExpressionEvaluator.TestTextFilter(FLogFilter_TextFilterExpressionContext(*Message)))
-        {
+    // AntiSpam filter
+    if (bAntiSpamMode && Message->Verbosity != ELogVerbosity::Warning && Message->Verbosity != ELogVerbosity::Error) {
+        smatch matcher;
+        string msg(TCHAR_TO_ANSI(*(*Message->Message)));
+        if (regex_search(msg, matcher, antiSpamRegex)) {
             return false;
         }
+    }
+
+    // Filter search phrase
+    if (bUseRegex) {
+        if (TextFilterExpressionEvaluator.GetFilterText().IsEmpty()) {
+            return true;
+        }
+        smatch matcher;
+        string msg(TCHAR_TO_ANSI(*(*Message->Message)));
+        if (!regex_search(msg, matcher, bIsRegexValid ? searchRegex : lastValidRegex)) {
+            return false;
+        }
+    }
+    else if (!TextFilterExpressionEvaluator.TestTextFilter(FLogFilter_TextFilterExpressionContext(*Message)))
+    {
+        return false;
     }
 
     return true;
