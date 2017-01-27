@@ -13,27 +13,21 @@ class FOutputLogTextLayoutMarshaller;
 class SSearchBox;
 
 /**
-* A single log message for the output log, holding a message and
-* a style, for color and bolding of the message.
+* A single log message for the output log, holding a single message
 */
 struct FLogMessage
 {
 	TSharedRef<FString> Message;
 	ELogVerbosity::Type Verbosity;
 	FName Style;
+    FName Category;
     int32 Count = 1;
 
-	FLogMessage(const TSharedRef<FString>& NewMessage, FName NewStyle = NAME_None)
-		: Message(NewMessage)
-		, Verbosity(ELogVerbosity::Log)
-		, Style(NewStyle)
-	{
-	}
-
-	FLogMessage(const TSharedRef<FString>& NewMessage, ELogVerbosity::Type NewVerbosity, FName NewStyle = NAME_None)
+	FLogMessage(const TSharedRef<FString>& NewMessage, ELogVerbosity::Type NewVerbosity, FName NewStyle, FName Category)
 		: Message(NewMessage)
 		, Verbosity(NewVerbosity)
 		, Style(NewStyle)
+        , Category(Category)
 	{
 	}
 };
@@ -158,6 +152,9 @@ struct FLogFilter
 
     /** true to filter common messages. */
     bool bAntiSpamMode = true;
+
+    /** false to filter out console command messages. */
+    bool bShowCommands = false;
 
 	/** Enable all filters by default */
 	FLogFilter() : TextFilterExpressionEvaluator(ETextFilterExpressionEvaluatorMode::BasicString)
@@ -356,6 +353,12 @@ private:
 
     /** Returns the state of "AntiSpam". */
     bool MenuAntiSpam_IsChecked() const;
+
+    /** Toggles "AntiSpam" true/false. */
+    void MenuShowCommands_Execute();
+
+    /** Returns the state of "AntiSpam". */
+    bool MenuShowCommands_IsChecked() const;
 
 	/** Forces re-population of the messages list */
 	void Refresh();

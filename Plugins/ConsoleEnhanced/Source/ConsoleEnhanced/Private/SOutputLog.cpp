@@ -1251,14 +1251,14 @@ bool SOutputLog::CreateLogMessages(const TCHAR* message, ELogVerbosity::Type Ver
                     HardWrapLineLen = FMath::Min(HardWrapLen - MessagePrefix.Len(), Line.Len() - CurrentStartIndex);
                     FString HardWrapLine = Line.Mid(CurrentStartIndex, HardWrapLineLen);
 
-                    OutMessages.Add(MakeShareable(new FLogMessage(MakeShareable(new FString(MessagePrefix + HardWrapLine)), Verbosity, Style)));
+                    OutMessages.Add(MakeShareable(new FLogMessage(MakeShareable(new FString(MessagePrefix + HardWrapLine)), Verbosity, Style, Category)));
                 }
                 else
                 {
                     HardWrapLineLen = FMath::Min(HardWrapLen, Line.Len() - CurrentStartIndex);
                     FString HardWrapLine = Line.Mid(CurrentStartIndex, HardWrapLineLen);
 
-                    OutMessages.Add(MakeShareable(new FLogMessage(MakeShareable(new FString(MoveTemp(HardWrapLine))), Verbosity, Style)));
+                    OutMessages.Add(MakeShareable(new FLogMessage(MakeShareable(new FString(MoveTemp(HardWrapLine))), Verbosity, Style, Category)));
                 }
 
                 bIsFirstLineInMessage = false;
@@ -1401,6 +1401,17 @@ TSharedRef<SWidget> SOutputLog::MakeAddFilterMenu()
             NAME_None,
             EUserInterfaceActionType::ToggleButton
         );
+
+        MenuBuilder.AddMenuEntry(
+            LOCTEXT("ShowCommandsMessages", "Show Commands"),
+            LOCTEXT("ShowCommandsMessages_Tooltip", "If unchecked, all console command calls are filtered out"),
+            FSlateIcon(),
+            FUIAction(FExecuteAction::CreateSP(this, &SOutputLog::MenuShowCommands_Execute),
+                FCanExecuteAction::CreateSP(this, &SOutputLog::Menu_CanExecute),
+                FIsActionChecked::CreateSP(this, &SOutputLog::MenuShowCommands_IsChecked)),
+            NAME_None,
+            EUserInterfaceActionType::ToggleButton
+        );
     }
     MenuBuilder.EndSection();
 
@@ -1482,6 +1493,20 @@ bool SOutputLog::MenuAntiSpam_IsChecked() const
     return Filter.bAntiSpamMode;
 }
 
+bool SOutputLog::MenuShowCommands_IsChecked() const
+{
+    return Filter.bShowCommands;
+}
+
+void SOutputLog::MenuShowCommands_Execute()
+{
+    Filter.bShowCommands = !Filter.bShowCommands;
+
+    // Flag the messages count as dirty
+    MessagesTextMarshaller->MarkMessagesCacheAsDirty();
+    Refresh();
+}
+
 void SOutputLog::MenuAntiSpam_Execute()
 {
     Filter.bAntiSpamMode = !Filter.bAntiSpamMode;
@@ -1552,6 +1577,10 @@ bool FLogFilter::IsMessageAllowed(const TSharedPtr<FLogMessage>& Message)
 
         if (Message->Verbosity != ELogVerbosity::Error && Message->Verbosity != ELogVerbosity::Warning && !bShowLogs)
         {
+            return false;
+        }
+
+        if (!bShowCommands && Message->Category == NAME_Cmd) {
             return false;
         }
     }
