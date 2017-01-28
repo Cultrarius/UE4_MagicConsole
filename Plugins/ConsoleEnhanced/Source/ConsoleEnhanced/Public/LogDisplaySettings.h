@@ -75,8 +75,8 @@ public:
         UPROPERTY(EditAnywhere, config, Category = "Output Log", AdvancedDisplay)
             float OutlineSize;
 
-        // The regex to determine if a log message is filtered out in "spam" mode.
-        UPROPERTY(VisibleAnywhere, config, Category = "Output Log", AdvancedDisplay, meta = (ConfigRestartRequired = true))
+        // The regex to determine if a log message is filtered out in "spam" mode. Caution! Only edit when you know what you are doing!
+        UPROPERTY(EditAnywhere, config, Category = "Output Log", AdvancedDisplay, meta = (ConfigRestartRequired = true))
             FString AntiSpamRegex = FString(R"((last play command: )|(No blueprints needed recompiling)|(PIE: )|(Creating play world package)"
                 "|(LoadErrors: New page)|(Finished looking for orphan)|(Missing cached shader map)|(MapCheck: New page)|(Deleted Actor: )"
                 "|(Deleted \\d* Actors)|(LogSavePackage: Save=)|(Finished SavePackage)|(LogFileHelpers: Saving map)|(Reallocating scene render targets)"
