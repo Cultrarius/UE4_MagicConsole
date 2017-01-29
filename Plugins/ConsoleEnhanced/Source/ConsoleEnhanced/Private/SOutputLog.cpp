@@ -3,8 +3,7 @@
 #include "ConsoleEnhancedPrivatePCH.h"
 #include "SOutputLog.h"
 #include "SScrollBorder.h"
-#include "GameFramework/GameModeBase.h"
-#include "GameFramework/GameStateBase.h"
+#include "GameFramework/GameMode.h"
 #include "Engine/LocalPlayer.h"
 #include "SSearchBox.h"
 #include "SlateTypes.h"
@@ -393,13 +392,12 @@ void SConsoleInputBox::OnTextCommitted(const FText& InText, ETextCommit::Type Co
                 {
                     if (!bWasHandled)
                     {
-                        AGameModeBase* const GameMode = World->GetAuthGameMode();
-                        AGameStateBase* const GameState = World->GetGameState();
+                        AGameMode* const GameMode = World->GetAuthGameMode();
                         if (GameMode && GameMode->ProcessConsoleExec(*ExecString, *GLog, NULL))
                         {
                             bWasHandled = true;
                         }
-                        else if (GameState && GameState->ProcessConsoleExec(*ExecString, *GLog, NULL))
+                        else if (World->GameState && World->GameState->ProcessConsoleExec(*ExecString, *GLog, NULL))
                         {
                             bWasHandled = true;
                         }
@@ -928,10 +926,6 @@ FTextBlockStyle FOutputLogTextLayoutMarshaller::GetStyle(const TSharedPtr<FLogMe
         style
             .SetShadowColorAndOpacity(FLinearColor::Transparent)
             .SetShadowOffset(FVector2D::ZeroVector);
-    }
-    if (StyleSettings->bDisplayOutline) {
-        style.Font.OutlineSettings.OutlineColor = StyleSettings->OutlineColor;
-        style.Font.OutlineSettings.OutlineSize = StyleSettings->OutlineSize;
     }
     for (const FLogCategorySetting& logCategory : StyleSettings->LogCategories) {
         if (logCategory.CategorySearchString.IsEmpty()) {
