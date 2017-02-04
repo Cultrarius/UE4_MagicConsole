@@ -216,6 +216,8 @@ public:
 
     void RemoveSingleLineFromLayout();
 
+    void AddEmptyRun();
+
 protected:
     FCustomTextLayout(FTextBlockStyle InDefaultTextStyle);
 };

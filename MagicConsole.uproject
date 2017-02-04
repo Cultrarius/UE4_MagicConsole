@@ -24,9 +24,14 @@
 		{
 			"Name": "SVG_Importer_Plugin",
 			"Enabled": true
+		},
+		{
+			"Name": "ConsoleEnhanced",
+			"Enabled": true,
+			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/86123c85a4474d609c5cef8a7fc5786b"
 		}
 	],
 	"AdditionalPluginDirectories": [
-		"/../../../../../../MagicConsole/Plugins"
+		"/../../../../../../../../../MagicConsole/Plugins"
 	]
 }
