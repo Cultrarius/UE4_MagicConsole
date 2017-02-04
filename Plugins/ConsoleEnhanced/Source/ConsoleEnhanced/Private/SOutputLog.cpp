@@ -635,6 +635,10 @@ bool FOutputLogTextLayoutMarshaller::AppendMessage(const TCHAR* InText, const EL
 
             // If we've already been given a text layout, then append these new messages rather than force a refresh of the entire document
             AppendMessagesToTextLayout(NewMessages);
+
+            if (TextLayout->GetLineModels().Num() == 0) {
+                TextLayout->AddEmptyRun();
+            }
         }
         else
         {
@@ -1070,6 +1074,15 @@ void FCustomTextLayout::RemoveSingleLineFromLayout()
     if (TextLayoutSize.Height < 0) {
         TextLayoutSize.Height = 0;
     }
+}
+
+void FCustomTextLayout::AddEmptyRun()
+{
+    TSharedRef<FString> LineText = MakeShareable(new FString());
+    TArray<TSharedRef<IRun>> Runs;
+    Runs.Add(FSlateTextRun::Create(FRunInfo(), LineText, GetDefaultTextStyle()));
+
+    AddLine(FTextLayout::FNewLineData(MoveTemp(LineText), MoveTemp(Runs)));
 }
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
