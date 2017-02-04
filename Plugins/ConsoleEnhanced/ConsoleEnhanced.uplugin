@@ -2,21 +2,24 @@
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "1.0",
-	"FriendlyName": "ConsoleEnhanced",
-	"Description": "",
-	"Category": "Other",
-	"CreatedBy": "",
-	"CreatedByURL": "",
+	"EngineVersion" : "4.14.0",
+	"FriendlyName": "Enhanced Output Log",
+	"Description": "This plugin provides a new Editor Output Log widget with awesome features and customization options",
+	"Category": "Editor",
+	"CreatedBy": "Cultrarius",
+	"CreatedByURL": "https://github.com/Cultrarius",
 	"DocsURL": "",
-	"MarketplaceURL": "",
-	"SupportURL": "",
+	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/86123c85a4474d609c5cef8a7fc5786b",
+	"SupportURL": "mailto:cultrarius@posteo.de",
+	"EnabledByDefault": true,
 	"CanContainContent": false,
 	"IsBetaVersion": false,
-	"Installed": false,
+	"Installed": true,
 	"Modules": [
 		{
 			"Name": "ConsoleEnhanced",
 			"Type": "Developer",
+			"WhitelistPlatforms": [ "Win64", "Win32" ],
 			"LoadingPhase": "Default"
 		}
 	]
