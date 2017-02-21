@@ -3,6 +3,7 @@
 #include "ConsoleEnhancedPrivatePCH.h"
 #include "SOutputLog.h"
 #include "SDebugConsole.h"
+#include "Editor/WorkspaceMenuStructure/Public/WorkspaceMenuStructure.h"
 #include "Editor/WorkspaceMenuStructure/Public/WorkspaceMenuStructureModule.h"
 #include "SDockTab.h"
 #include "LogDisplaySettings.h"
