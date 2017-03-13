@@ -1,4 +1,4 @@
-// Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
+// Copyright Michael Galetzka, 2017
 
 #include "ConsoleEnhancedPrivatePCH.h"
 #include "SOutputLog.h"
@@ -61,7 +61,7 @@ protected:
 
 private:
 
-    /** All log messsges since this module has been started */
+    /** All log messages since this module has been started */
     TArray< TSharedPtr<FLogMessage> > Messages;
 };
 
