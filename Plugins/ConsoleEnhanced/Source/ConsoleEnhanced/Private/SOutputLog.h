@@ -166,7 +166,7 @@ struct FLogFilter
 	}
 
 	/** Returns true if any messages should be filtered out */
-	bool IsFilterSet() { return !bShowErrors || !bShowLogs || !bShowWarnings || TextFilterExpressionEvaluator.GetFilterType() != ETextFilterExpressionType::Empty || !TextFilterExpressionEvaluator.GetFilterText().IsEmpty(); }
+	bool IsFilterSet() { return bUseRegex || bCollapsedMode || bAntiSpamMode || !bShowCommands || !bShowErrors || !bShowLogs || !bShowWarnings || TextFilterExpressionEvaluator.GetFilterType() != ETextFilterExpressionType::Empty || !TextFilterExpressionEvaluator.GetFilterText().IsEmpty(); }
 
 	/** Checks the given message against set filters */
 	bool IsMessageAllowed(const TSharedPtr<FLogMessage>& Message);

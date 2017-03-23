@@ -733,9 +733,7 @@ void FOutputLogTextLayoutMarshaller::AppendMessagesToTextLayout(const TArray<TSh
         {
             continue;
         }
-
-        // Increment the cached count
-        CachedNumMessages++;
+        MarkMessagesCacheAsDirty();
 
         auto StyleSettings = GetDefault<ULogDisplaySettings>();
         TArray<TSharedRef<IRun>> Runs;
