@@ -616,7 +616,6 @@ bool FOutputLogTextLayoutMarshaller::AppendMessage(const TCHAR* InText, const EL
                 PrevMessage->Count += 1;
                 if (Filter->IsMessageAllowed(PrevMessage))
                 {
-                    TextLayout->RemoveSingleLineFromLayout();
                     TextLayout->RemoveLine(TextLayout->GetLineModels().Num() - 1);
                 }
                 NewMessages[0] = Messages.Pop(false);
@@ -733,9 +732,7 @@ void FOutputLogTextLayoutMarshaller::AppendMessagesToTextLayout(const TArray<TSh
         {
             continue;
         }
-
-        // Increment the cached count
-        CachedNumMessages++;
+        MarkMessagesCacheAsDirty();
 
         auto StyleSettings = GetDefault<ULogDisplaySettings>();
         TArray<TSharedRef<IRun>> Runs;
