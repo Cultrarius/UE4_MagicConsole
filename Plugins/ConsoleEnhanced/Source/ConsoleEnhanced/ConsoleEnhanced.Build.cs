@@ -4,9 +4,8 @@ using UnrealBuildTool;
 
 public class ConsoleEnhanced : ModuleRules
 {
-    public ConsoleEnhanced(TargetInfo Target)
+    public ConsoleEnhanced(ReadOnlyTargetRules Target) : base(Target)
     {
-
         PublicIncludePaths.AddRange(
             new string[] { "ConsoleEnhanced/Public" }
         );
