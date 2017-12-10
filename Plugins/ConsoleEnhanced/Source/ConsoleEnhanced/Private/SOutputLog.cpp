@@ -1085,7 +1085,7 @@ void FCustomTextLayout::AddEmptyRun()
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SOutputLog::Construct(const FArguments& InArgs)
 {
-    MessagesTextMarshaller = FOutputLogTextLayoutMarshaller::Create(MoveTemp(InArgs._Messages), &Filter);
+    MessagesTextMarshaller = FOutputLogTextLayoutMarshaller::Create(InArgs._Messages, &Filter);
 
     MessagesTextBox = SNew(SMultiLineEditableTextBox)
         .Style(FEditorStyle::Get(), "Log.TextBox")
@@ -1122,7 +1122,7 @@ void SOutputLog::Construct(const FArguments& InArgs)
 					.AutoWidth()
 					[
 						SNew(SComboButton)
-						.ComboButtonStyle(FEditorStyle::Get(), "OutputLog.Filters.Style")
+						.ComboButtonStyle(FEditorStyle::Get(), "GenericFilters.ComboButtonStyle")
 						.ForegroundColor(FLinearColor::White)
 						.ContentPadding(0)
 						.ToolTipText(LOCTEXT("AddFilterToolTip", "Add an output log filter."))
@@ -1137,7 +1137,7 @@ void SOutputLog::Construct(const FArguments& InArgs)
 							.AutoWidth()
 							[
 								SNew(STextBlock)
-								.TextStyle(FEditorStyle::Get(), "OutputLog.Filters.Text")
+								.TextStyle(FEditorStyle::Get(), "GenericFilters.TextStyle")
 								.Font(FEditorStyle::Get().GetFontStyle("FontAwesome.9"))
 								.Text(FText::FromString(FString(TEXT("\xf0b0"))) /*fa-filter*/)
 							]
@@ -1147,7 +1147,7 @@ void SOutputLog::Construct(const FArguments& InArgs)
 							.Padding(2, 0, 0, 0)
 							[
 								SNew(STextBlock)
-								.TextStyle(FEditorStyle::Get(), "OutputLog.Filters.Text")
+								.TextStyle(FEditorStyle::Get(), "GenericFilters.TextStyle")
 								.Text(LOCTEXT("Filters", "Filters"))
 							]
 						]
@@ -1159,6 +1159,7 @@ void SOutputLog::Construct(const FArguments& InArgs)
 						SAssignNew(FilterTextBox, SSearchBox)
 						.HintText(LOCTEXT("SearchLogHint", "Search Log"))
 						.OnTextChanged(this, &SOutputLog::OnFilterTextChanged)
+                        .OnTextCommitted(this, &SOutputLog::OnFilterTextCommitted)
 						.DelayChangeNotificationsWhileTyping(true)
 					]
 				]
@@ -1370,6 +1371,11 @@ void SOutputLog::OnFilterTextChanged(const FText& InFilterText)
 
     // Repopulate the list to show only what has not been filtered out.
     Refresh();
+}
+
+void SOutputLog::OnFilterTextCommitted(const FText& InFilterText, ETextCommit::Type InCommitType)
+{
+    OnFilterTextChanged(InFilterText);
 }
 
 TSharedRef<SWidget> SOutputLog::MakeAddFilterMenu()

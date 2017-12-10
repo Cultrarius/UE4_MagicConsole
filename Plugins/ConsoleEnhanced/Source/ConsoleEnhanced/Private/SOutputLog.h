@@ -311,6 +311,9 @@ private:
     /** Called by Slate when the filter box changes text. */
 	void OnFilterTextChanged(const FText& InFilterText);
 
+    /** Called by Slate when the filter text box is confirmed. */
+    void OnFilterTextCommitted(const FText& InFilterText, ETextCommit::Type InCommitType);
+
 	/** Make the "Filters" menu. */
 	TSharedRef<SWidget> MakeAddFilterMenu();
 
