@@ -1,6 +1,6 @@
 // Copyright Michael Galetzka, 2017
 
-#include "ConsoleEnhancedPrivatePCH.h"
+#include "ConsoleEnhanced.h"
 #include "SOutputLog.h"
 #include "SDebugConsole.h"
 #include "Editor/WorkspaceMenuStructure/Public/WorkspaceMenuStructure.h"

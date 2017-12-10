@@ -1,6 +1,7 @@
 // Copyright Michael Galetzka, 2017
 
 #pragma once
+#include "ConsoleEnhanced.h"
 #include "BaseTextLayoutMarshaller.h"
 #include "TextFilterExpressionEvaluator.h"
 #include "Regex.h"
@@ -12,6 +13,10 @@
 class FOutputLogTextLayoutMarshaller;
 class SSearchBox;
 
+enum FilterStatus {
+    UNKNOWN, VISIBLE, HIDDEN
+};
+
 /**
 * A single log message for the output log, holding a single message
 */
@@ -22,12 +27,15 @@ struct FLogMessage
 	FName Style;
     FName Category;
     int32 Count = 1;
+    std::string CString;
+    FilterStatus filter = UNKNOWN;
 
 	FLogMessage(const TSharedRef<FString>& NewMessage, ELogVerbosity::Type NewVerbosity, FName NewStyle, FName Category)
 		: Message(NewMessage)
 		, Verbosity(NewVerbosity)
 		, Style(NewStyle)
         , Category(Category)
+        , CString(TCHAR_TO_UTF8(**NewMessage))
 	{
 	}
 };
@@ -207,6 +215,7 @@ private:
     std::regex lastValidRegex;
     std::regex antiSpamRegex;
     FText getInValidRegexText();
+    bool checkMessage(const TSharedPtr<FLogMessage>& Message);
 };
 
 class FCustomTextLayout : public FSlateTextLayout
@@ -395,6 +404,8 @@ public:
 	int32 GetNumFilteredMessages();
 
 	void MarkMessagesCacheAsDirty();
+
+    void MarkMessagesFilterAsDirty();
 
 protected:
 

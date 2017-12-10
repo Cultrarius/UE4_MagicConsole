@@ -77,11 +77,7 @@ public:
 
         // The regex to determine if a log message is filtered out in "spam" mode. Caution! Only edit when you know what you are doing!
         UPROPERTY(EditAnywhere, config, Category = "Output Log", AdvancedDisplay, meta = (ConfigRestartRequired = true))
-            FString AntiSpamRegex = FString(R"((last play command: )|(No blueprints needed recompiling)|(PIE: )|(Creating play world package)"
-                "|(LoadErrors: New page)|(Finished looking for orphan)|(Missing cached shader map)|(MapCheck: New page)|(Deleted Actor: )"
-                "|(Deleted \\d* Actors)|(LogSavePackage: Save=)|(Finished SavePackage)|(LogFileHelpers: Saving map)|(Reallocating scene render targets)"
-                "|(Native class hierarchy)|(MaterialEditorStats: )|(seconds spent updating \\d+ materials)|(Quitting Cascade)|(LogSavePackage: Moving)"
-                "|(Creating AISystem)|(LogInit: )|(level for play took)|(LogEditorViewport: Clicking on Actor)|(New page: Lighting Build))");
+            FString AntiSpamRegex = FString(TEXT("(last play command: )|(No blueprints needed recompiling)|(PIE: )|(Creating play world package)|(LoadErrors: New page)|(Finished looking for orphan)|(Missing cached shader map)|(MapCheck: New page)|(Deleted Actor: )|(Deleted \\d* Actors)|(LogSavePackage: Save=)|(Finished SavePackage)|(LogFileHelpers: Saving map)|(Reallocating scene render targets)|(Native class hierarchy)|(MaterialEditorStats: )|(seconds spent updating \\d+ materials)|(Quitting Cascade)|(LogSavePackage: Moving)|(Creating AISystem)|(LogInit: )|(level for play took)|(LogEditorViewport: Clicking on Actor)|(New page: Lighting Build)"));
 
         // Allows to define custom log categories by search string. The first matching category is applied to each line.
         UPROPERTY(EditAnywhere, config, Category = "Log Categories")

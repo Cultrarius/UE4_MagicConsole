@@ -1,6 +1,5 @@
 // Copyright Michael Galetzka, 2017
 
-#include "ConsoleEnhancedPrivatePCH.h"
 #include "SOutputLog.h"
 #include "SScrollBorder.h"
 #include "GameFramework/GameModeBase.h"
@@ -943,8 +942,7 @@ FTextBlockStyle FOutputLogTextLayoutMarshaller::GetStyle(const TSharedPtr<FLogMe
             try {
                 regex searchPattern(TCHAR_TO_ANSI(*logCategory.CategorySearchString), regex_constants::nosubs | regex_constants::icase);
                 smatch matcher;
-                string msg(TCHAR_TO_ANSI(*(*Message->Message)));
-                isMatch = regex_search(msg, matcher, searchPattern);
+                isMatch = regex_search(Message->CString, matcher, searchPattern);
             }
             catch (std::regex_error&) {
                 // just ignore the log category
@@ -1031,6 +1029,14 @@ int32 FOutputLogTextLayoutMarshaller::GetNumFilteredMessages()
 void FOutputLogTextLayoutMarshaller::MarkMessagesCacheAsDirty()
 {
     bNumMessagesCacheDirty = true;
+}
+
+void FOutputLogTextLayoutMarshaller::MarkMessagesFilterAsDirty()
+{
+    for (const auto& CurrentMessage : Messages)
+    {
+        CurrentMessage->filter = UNKNOWN;
+    }
 }
 
 FOutputLogTextLayoutMarshaller::FOutputLogTextLayoutMarshaller(TArray< TSharedPtr<FLogMessage> > InMessages, FLogFilter* InFilter)
@@ -1361,6 +1367,7 @@ void SOutputLog::Refresh()
 void SOutputLog::OnFilterTextChanged(const FText& InFilterText)
 {
     // Flag the messages count as dirty
+    MessagesTextMarshaller->MarkMessagesFilterAsDirty();
     MessagesTextMarshaller->MarkMessagesCacheAsDirty();
 
     // Set filter phrases
@@ -1519,6 +1526,7 @@ void SOutputLog::MenuShowCommands_Execute()
     Filter.bShowCommands = !Filter.bShowCommands;
 
     // Flag the messages count as dirty
+    MessagesTextMarshaller->MarkMessagesFilterAsDirty();
     MessagesTextMarshaller->MarkMessagesCacheAsDirty();
     Refresh();
 }
@@ -1528,6 +1536,7 @@ void SOutputLog::MenuAntiSpam_Execute()
     Filter.bAntiSpamMode = !Filter.bAntiSpamMode;
 
     // Flag the messages count as dirty
+    MessagesTextMarshaller->MarkMessagesFilterAsDirty();
     MessagesTextMarshaller->MarkMessagesCacheAsDirty();
     Refresh();
 }
@@ -1537,6 +1546,7 @@ void SOutputLog::MenuCollapsed_Execute()
     Filter.bCollapsedMode = !Filter.bCollapsedMode;
 
     // Flag the messages count as dirty
+    MessagesTextMarshaller->MarkMessagesFilterAsDirty();
     MessagesTextMarshaller->MarkMessagesCacheAsDirty();
     Refresh();
 }
@@ -1546,6 +1556,7 @@ void SOutputLog::MenuRegex_Execute()
     Filter.bUseRegex = !Filter.bUseRegex;
 
     // Flag the messages count as dirty
+    MessagesTextMarshaller->MarkMessagesFilterAsDirty();
     MessagesTextMarshaller->MarkMessagesCacheAsDirty();
     Refresh();
 }
@@ -1555,6 +1566,7 @@ void SOutputLog::MenuLogs_Execute()
     Filter.bShowLogs = !Filter.bShowLogs;
 
     // Flag the messages count as dirty
+    MessagesTextMarshaller->MarkMessagesFilterAsDirty();
     MessagesTextMarshaller->MarkMessagesCacheAsDirty();
     Refresh();
 }
@@ -1564,6 +1576,7 @@ void SOutputLog::MenuWarnings_Execute()
     Filter.bShowWarnings = !Filter.bShowWarnings;
 
     // Flag the messages count as dirty
+    MessagesTextMarshaller->MarkMessagesFilterAsDirty();
     MessagesTextMarshaller->MarkMessagesCacheAsDirty();
     Refresh();
 }
@@ -1573,30 +1586,45 @@ void SOutputLog::MenuErrors_Execute()
     Filter.bShowErrors = !Filter.bShowErrors;
 
     // Flag the messages count as dirty
+    MessagesTextMarshaller->MarkMessagesFilterAsDirty();
     MessagesTextMarshaller->MarkMessagesCacheAsDirty();
     Refresh();
 }
 
 bool FLogFilter::IsMessageAllowed(const TSharedPtr<FLogMessage>& Message)
 {
+    if (Message->filter != UNKNOWN) {
+        return Message->filter == VISIBLE;
+    }
+    bool visible = checkMessage(Message);
+    Message->filter = visible ? VISIBLE : HIDDEN;
+    return visible;
+}
+
+bool FLogFilter::checkMessage(const TSharedPtr<FLogMessage>& Message)
+{
     // Filter Verbosity
     {
         if (Message->Verbosity == ELogVerbosity::Error && !bShowErrors)
         {
+            Message->filter = HIDDEN;
             return false;
         }
 
         if (Message->Verbosity == ELogVerbosity::Warning && !bShowWarnings)
         {
+            Message->filter = HIDDEN;
             return false;
         }
 
         if (Message->Verbosity != ELogVerbosity::Error && Message->Verbosity != ELogVerbosity::Warning && !bShowLogs)
         {
+            Message->filter = HIDDEN;
             return false;
         }
 
         if (!bShowCommands && Message->Category == NAME_Cmd) {
+            Message->filter = HIDDEN;
             return false;
         }
     }
@@ -1604,8 +1632,8 @@ bool FLogFilter::IsMessageAllowed(const TSharedPtr<FLogMessage>& Message)
     // AntiSpam filter
     if (bAntiSpamMode && Message->Verbosity != ELogVerbosity::Warning && Message->Verbosity != ELogVerbosity::Error) {
         smatch matcher;
-        string msg(TCHAR_TO_ANSI(*(*Message->Message)));
-        if (regex_search(msg, matcher, antiSpamRegex)) {
+        bool found = regex_search(Message->CString, matcher, antiSpamRegex);
+        if (found) {
             return false;
         }
     }
@@ -1616,8 +1644,7 @@ bool FLogFilter::IsMessageAllowed(const TSharedPtr<FLogMessage>& Message)
             return true;
         }
         smatch matcher;
-        string msg(TCHAR_TO_ANSI(*(*Message->Message)));
-        if (!regex_search(msg, matcher, bIsRegexValid ? searchRegex : lastValidRegex)) {
+        if (!regex_search(Message->CString, matcher, bIsRegexValid ? searchRegex : lastValidRegex)) {
             return false;
         }
     }

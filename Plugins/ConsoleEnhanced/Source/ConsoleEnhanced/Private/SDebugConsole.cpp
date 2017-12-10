@@ -1,8 +1,7 @@
 // Copyright Michael Galetzka, 2017
 
-#include "ConsoleEnhancedPrivatePCH.h"
-#include "ConsoleEnhanced.h"
 #include "SDebugConsole.h"
+#include "ConsoleEnhanced.h"
 #include "SOutputLog.h"
 
 namespace DebugConsoleDefs

@@ -5,6 +5,7 @@
 #include "ModuleManager.h"
 #include "UnrealEd.h" 
 #include "Editor.h"
+#include "SlateBasics.h"
 
 /** Style of the debug console */
 namespace EDebugConsoleStyle
