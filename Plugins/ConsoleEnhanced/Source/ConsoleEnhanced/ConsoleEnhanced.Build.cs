@@ -6,6 +6,10 @@ public class ConsoleEnhanced : ModuleRules
 {
     public ConsoleEnhanced(ReadOnlyTargetRules Target) : base(Target)
     {
+        MinFilesUsingPrecompiledHeaderOverride = 1;
+        bFasterWithoutUnity = true;
+        PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+
         PublicIncludePaths.AddRange(
             new string[] { "ConsoleEnhanced/Public" }
         );
