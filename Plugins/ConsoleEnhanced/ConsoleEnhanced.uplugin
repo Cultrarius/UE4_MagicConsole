@@ -2,7 +2,7 @@
 	"FileVersion": 3,
 	"Version": 2,
 	"VersionName": "1.1",
-	"EngineVersion" : "4.16.0",
+	"EngineVersion" : "4.18.0",
 	"FriendlyName": "Enhanced Output Log",
 	"Description": "This plugin provides a new Editor Output Log widget with awesome features and customization options",
 	"Category": "Editor",

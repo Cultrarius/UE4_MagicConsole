@@ -5,21 +5,10 @@ using System.Collections.Generic;
 
 public class MagicConsoleEditorTarget : TargetRules
 {
-	public MagicConsoleEditorTarget(TargetInfo Target)
+	public MagicConsoleEditorTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Editor;
-	}
-
-	//
-	// TargetRules interface.
-	//
-
-	public override void SetupBinaries(
-		TargetInfo Target,
-		ref List<UEBuildBinaryConfiguration> OutBuildBinaryConfigurations,
-		ref List<string> OutExtraModuleNames
-		)
-	{
-		OutExtraModuleNames.AddRange( new string[] { "MagicConsole" } );
+		
+		ExtraModuleNames.AddRange(new string[] { "MagicConsole" });
 	}
 }
