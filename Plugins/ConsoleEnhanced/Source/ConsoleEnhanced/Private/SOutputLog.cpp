@@ -343,7 +343,7 @@ void SConsoleInputBox::OnTextCommitted(const FText& InText, ETextCommit::Type Co
     {
         if (!InText.IsEmpty())
         {
-            IConsoleManager::Get().AddConsoleHistoryEntry(*InText.ToString());
+            IConsoleManager::Get().AddConsoleHistoryEntry(TEXT(""), *InText.ToString());
 
             // Copy the exec text string out so we can clear the widget's contents.  If the exec command spawns
             // a new window it can cause the text box to lose focus, which will result in this function being
@@ -493,7 +493,7 @@ FReply SConsoleInputBox::OnPreviewKeyDown(const FGeometry& MyGeometry, const FKe
         {
             TArray<FString> History;
 
-            IConsoleManager::Get().GetConsoleHistory(History);
+            IConsoleManager::Get().GetConsoleHistory(TEXT(""), History);
 
             SetSuggestions(History, true);
 
