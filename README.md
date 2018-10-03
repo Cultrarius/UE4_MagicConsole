@@ -1,3 +1,5 @@
+![Banner](Screenshots/EnhancedLogPlugin_Featured.png)
+
 # UE4 Enhanced Output Log
 
 This repository contains the source code for the following UE4 plugin: [UE4 marketplace](https://www.unrealengine.com/marketplace/enhanced-output-log)
