@@ -15,7 +15,9 @@ This repository contains the source code for the following UE4 plugin: [UE4 mark
 
 # How to contribute
 
-You have a cool idea or found a bug? Cool, fork the project, commit your changes and open a pull request :)
+You have a cool idea or found a bug? Cool! Fork the project, commit your changes and open a pull request :)
+
+If you have any questions or problems, just write me: cultrarius@posteo.de
 
 # License
 
