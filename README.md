@@ -1,6 +1,6 @@
 # UE4 Enhanced Output Log
 
-This repository contains the source code for the console UE4 plugin: (UE4 marketplace)[https://www.unrealengine.com/marketplace/enhanced-output-log]
+This repository contains the source code for the following UE4 plugin: [UE4 marketplace](https://www.unrealengine.com/marketplace/enhanced-output-log)
 
 # How to compile and install
 
