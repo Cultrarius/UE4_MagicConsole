@@ -1,1 +1,1 @@
-E:\GameDev\Unreal\UE_4.20\Engine\Build\BatchFiles\RunUAT.bat BuildPlugin -Plugin=D:\Unreal\Plugins\MagicConsole\Plugins\ConsoleEnhanced\ConsoleEnhanced.uplugin -Package=D:\Unreal\Plugins\MagicConsole\Packaged\EnhancedOutputLog -Rocket
+E:\GameDev\Unreal\UE_4.21\Engine\Build\BatchFiles\RunUAT.bat BuildPlugin -Plugin=D:\Unreal\Plugins\MagicConsole\Plugins\ConsoleEnhanced\ConsoleEnhanced.uplugin -Package=D:\Unreal\Plugins\MagicConsole\Packaged\EnhancedOutputLog -Rocket
