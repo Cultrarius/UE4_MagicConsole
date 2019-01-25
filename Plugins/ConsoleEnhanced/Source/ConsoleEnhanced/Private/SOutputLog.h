@@ -2,12 +2,12 @@
 
 #pragma once
 #include "ConsoleEnhanced.h"
-#include "BaseTextLayoutMarshaller.h"
-#include "TextFilterExpressionEvaluator.h"
-#include "Regex.h"
+#include "Framework/Text/BaseTextLayoutMarshaller.h"
+#include "Misc/TextFilterExpressionEvaluator.h"
+#include "Internationalization/Regex.h"
 #include <map>
 #include <regex>
-#include "SlateTextLayout.h"
+#include "Framework/Text/SlateTextLayout.h"
 #include "LogDisplaySettings.h"
 
 class FOutputLogTextLayoutMarshaller;
@@ -221,14 +221,14 @@ private:
 class FCustomTextLayout : public FSlateTextLayout
 {
 public:
-    static TSharedRef<FSlateTextLayout> CreateLayout(FTextBlockStyle InDefaultTextStyle);
+    static TSharedRef<FSlateTextLayout> CreateLayout(SWidget* InWidget, const FTextBlockStyle& InDefaultTextStyle);
 
     void RemoveSingleLineFromLayout();
 
     void AddEmptyRun();
 
 protected:
-    FCustomTextLayout(FTextBlockStyle InDefaultTextStyle);
+    FCustomTextLayout(SWidget* InWidget, FTextBlockStyle InDefaultTextStyle);
 };
 
 /**

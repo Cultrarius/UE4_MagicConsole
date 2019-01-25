@@ -8,22 +8,7 @@ public class ConsoleEnhanced : ModuleRules
     {
         MinFilesUsingPrecompiledHeaderOverride = 1;
         bFasterWithoutUnity = true;
-        PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-
-        PublicIncludePaths.AddRange(
-            new string[] { "ConsoleEnhanced/Public" }
-        );
-
-
-        PrivateIncludePaths.AddRange(
-            new string[] { "ConsoleEnhanced/Private", }
-        );
-
-
-        PublicDependencyModuleNames.AddRange(
-            new string[] { "Core", }
-        );
-
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
         PrivateDependencyModuleNames.AddRange(
             new string[] {

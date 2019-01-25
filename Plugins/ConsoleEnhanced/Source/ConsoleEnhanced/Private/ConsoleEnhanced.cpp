@@ -5,9 +5,10 @@
 #include "SDebugConsole.h"
 #include "Editor/WorkspaceMenuStructure/Public/WorkspaceMenuStructure.h"
 #include "Editor/WorkspaceMenuStructure/Public/WorkspaceMenuStructureModule.h"
-#include "SDockTab.h"
+#include "Widgets/Docking/SDockTab.h"
 #include "LogDisplaySettings.h"
 #include "ISettingsModule.h"
+#include "EditorStyleSet.h"
 
 #define LOCTEXT_NAMESPACE "FConsoleEnhancedModule"
 

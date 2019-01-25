@@ -2,8 +2,7 @@
 
 #pragma once
 
-#include "ModuleManager.h"
-#include "UnrealEd.h" 
+#include "Modules/ModuleInterface.h"
 #include "Editor.h"
 #include "SlateBasics.h"
 

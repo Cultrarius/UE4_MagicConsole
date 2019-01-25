@@ -1,17 +1,19 @@
 // Copyright Michael Galetzka, 2017
 
 #include "SOutputLog.h"
-#include "SScrollBorder.h"
+#include "Widgets/Layout/SScrollBorder.h"
 #include "GameFramework/GameModeBase.h"
 #include "GameFramework/GameStateBase.h"
 #include "Engine/LocalPlayer.h"
-#include "SSearchBox.h"
-#include "SlateTypes.h"
+#include "Widgets/Input/SSearchBox.h"
+#include "Styling/SlateTypes.h"
 #include "AssetRegistryModule.h"
-#include "BlueprintEditorUtils.h"
+#include "Kismet2/BlueprintEditorUtils.h"
 #include "BlueprintEditorModule.h"
 #include "BlueprintEditor.h"
 #include "SourceCodeNavigation.h"
+#include "EditorStyleSet.h"
+#include "Classes/EditorStyleSettings.h"
 
 using namespace std;
 
@@ -1056,15 +1058,15 @@ FOutputLogTextLayoutMarshaller::FOutputLogTextLayoutMarshaller(TArray< TSharedPt
 
 
 
-TSharedRef<FSlateTextLayout> FCustomTextLayout::CreateLayout(FTextBlockStyle InDefaultTextStyle)
+TSharedRef<FSlateTextLayout> FCustomTextLayout::CreateLayout(SWidget* InWidget, const FTextBlockStyle& InDefaultTextStyle)
 {
-    TSharedRef< FCustomTextLayout > Layout = MakeShareable(new FCustomTextLayout(MoveTemp(InDefaultTextStyle)));
+    TSharedRef< FCustomTextLayout > Layout = MakeShareable(new FCustomTextLayout(InWidget, InDefaultTextStyle));
     Layout->AggregateChildren();
     return Layout;
 }
 
 
-FCustomTextLayout::FCustomTextLayout(FTextBlockStyle InDefaultTextStyle) : FSlateTextLayout(MoveTemp(InDefaultTextStyle)) {
+FCustomTextLayout::FCustomTextLayout(SWidget* InWidget, FTextBlockStyle InDefaultTextStyle) : FSlateTextLayout(InWidget, MoveTemp(InDefaultTextStyle)) {
 
 }
 

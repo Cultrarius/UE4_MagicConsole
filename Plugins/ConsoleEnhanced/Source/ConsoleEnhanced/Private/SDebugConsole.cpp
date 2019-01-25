@@ -3,6 +3,7 @@
 #include "SDebugConsole.h"
 #include "ConsoleEnhanced.h"
 #include "SOutputLog.h"
+#include "EditorStyleSet.h"
 
 namespace DebugConsoleDefs
 {
