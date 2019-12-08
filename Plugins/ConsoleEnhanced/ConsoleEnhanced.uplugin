@@ -19,7 +19,7 @@
 		{
 			"Name": "ConsoleEnhanced",
 			"Type": "Developer",
-			"WhitelistPlatforms": [ "Win64", "Win32" ],
+			"WhitelistPlatforms": [ "Win64", "Win32", "Mac" ],
 			"LoadingPhase": "Default"
 		}
 	]
