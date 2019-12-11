@@ -14,6 +14,7 @@
 #include "SourceCodeNavigation.h"
 #include "EditorStyleSet.h"
 #include "Classes/EditorStyleSettings.h"
+#include "Subsystems/AssetEditorSubsystem.h"
 
 using namespace std;
 
@@ -669,7 +670,8 @@ struct RichTextHelper {
         if (Blueprint && Blueprint->IsValidLowLevel()) {
 
             // check to see if the blueprint is already opened in one of the editors
-            auto editors = FAssetEditorManager::Get().FindEditorsForAsset(Blueprint);
+            UAssetEditorSubsystem* EditorSubsystem = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>();
+            auto editors = EditorSubsystem->FindEditorsForAsset(Blueprint);
             for (IAssetEditorInstance* editor : editors) {
                 FBlueprintEditor* bpEditor = static_cast<FBlueprintEditor*>(editor);
                 if (bpEditor && bpEditor->GetBlueprintObj() == Blueprint) {
