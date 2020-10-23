@@ -10,13 +10,17 @@ public class ConsoleEnhanced : ModuleRules
         bFasterWithoutUnity = true;
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
+        if (Target.Type == TargetType.Editor)
+        {
+            PrivateDependencyModuleNames.Add("UnrealEd");
+        }
+
         PrivateDependencyModuleNames.AddRange(
             new string[] {
                 "Core",
                 "CoreUObject",
                 "Engine",
                 "InputCore",
-                "UnrealEd",
                 "Slate",
                 "SlateCore",
                 "EditorStyle",
