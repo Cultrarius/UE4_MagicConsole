@@ -2,7 +2,7 @@
 	"FileVersion": 3,
 	"Version": 3,
 	"VersionName": "1.2",
-	"EngineVersion" : "4.25.0",
+	"EngineVersion" : "4.26.0",
 	"FriendlyName": "Enhanced Output Log",
 	"Description": "This plugin provides a new Editor Output Log widget with awesome features and customization options",
 	"Category": "Editor",
@@ -18,8 +18,8 @@
 	"Modules": [
 		{
 			"Name": "ConsoleEnhanced",
-			"Type": "DeveloperTool",
-			"WhitelistPlatforms": [ "Win64", "Win32" ],
+			"Type": "Editor",
+			"WhitelistPlatforms": [ "Win64", "Win32", "Mac" ],
 			"LoadingPhase": "Default"
 		}
 	]
