@@ -10,3 +10,4 @@
 *.sln
 /MagicConsole.VC.VC.opendb
 /MagicConsole.VC.db
+/Plugins/Developer/
